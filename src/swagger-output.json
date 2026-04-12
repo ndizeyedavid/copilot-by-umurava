@@ -118,6 +118,44 @@
         }
       }
     },
+    "Application": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "talentId": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "reviewing", "shortlisted", "rejected", "hired"]
+        },
+        "coverLetter": {
+          "type": "string"
+        },
+        "resumeUrl": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "screeningId": {
+          "type": "string"
+        },
+        "appliedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
     "Talent": {
       "type": "object",
       "properties": {
@@ -551,34 +589,15 @@
       "post": {
         "tags": ["AI Screening"],
         "summary": "Run AI-powered candidate screening",
-        "description": "Uses Gemini AI to evaluate and rank candidates against job requirements. Returns match scores, strengths, gaps, and hiring recommendations.",
+        "description": "Uses Gemini AI to evaluate and rank all applicants for a job. Automatically fetches applicants from Applications collection, runs AI evaluation, and updates application statuses.",
         "parameters": [
           {
             "name": "jobId",
             "in": "path",
             "required": true,
             "type": "string",
-            "description": "MongoDB ID of the job to screen against",
+            "description": "MongoDB ID of the job to screen applicants for",
             "example": "6618f5a2b4d3c2e1f0a9b8c7"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": false,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "candidateIds": {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "description": "Optional: Filter specific candidates. Omit to screen all talents.",
-                  "example": [
-                    "6618f5a2b4d3c2e1f0a9b8c8",
-                    "6618f5a2b4d3c2e1f0a9b8c9"
-                  ]
-                }
-              }
-            }
           }
         ],
         "responses": {
@@ -588,12 +607,14 @@
               "type": "object",
               "properties": {
                 "message": { "type": "string" },
-                "screening": { "$ref": "#/definitions/Screening" }
+                "screening": { "$ref": "#/definitions/Screening" },
+                "applicantsScreened": { "type": "number" }
               }
             },
             "examples": {
               "application/json": {
-                "message": "AI screening complete. 3 candidates ranked",
+                "message": "AI screening complete. 3 applicants ranked",
+                "applicantsScreened": 3,
                 "screening": {
                   "_id": "6629a6b3c5d4e3f2a1b0c9d8",
                   "jobId": "6618f5a2b4d3c2e1f0a9b8c7",
@@ -636,7 +657,7 @@
               }
             }
           },
-          "400": { "description": "No candidates found" },
+          "400": { "description": "No applicants found for this job" },
           "404": { "description": "Job not found" },
           "500": { "description": "AI screening failed" }
         }
@@ -975,6 +996,235 @@
           "500": {
             "description": "Internal Server Error"
           }
+        }
+      }
+    },
+    "/applications/": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Get all applications",
+        "description": "Retrieve all talent applications",
+        "responses": {
+          "200": {
+            "description": "List of applications",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "applications": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/Application" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "post": {
+        "tags": ["Applications"],
+        "summary": "Submit application",
+        "description": "Talent applies to a job",
+        "parameters": [
+          {
+            "name": "application",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "jobId": {
+                  "type": "string",
+                  "example": "6618f5a2b4d3c2e1f0a9b8c7"
+                },
+                "talentId": {
+                  "type": "string",
+                  "example": "6618f5a2b4d3c2e1f0a9b8c8"
+                },
+                "coverLetter": { "type": "string" },
+                "resumeUrl": { "type": "string" }
+              },
+              "required": ["jobId", "talentId"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Application submitted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "application": { "$ref": "#/definitions/Application" }
+              }
+            }
+          },
+          "409": { "description": "Already applied" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/applications/{id}": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Get application by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Application found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "application": { "$ref": "#/definitions/Application" }
+              }
+            }
+          },
+          "404": { "description": "Application not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      },
+      "delete": {
+        "tags": ["Applications"],
+        "summary": "Delete application",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Application deleted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "application": { "$ref": "#/definitions/Application" }
+              }
+            }
+          },
+          "404": { "description": "Application not found" },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/applications/job/{jobId}": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Get applications for a job",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job applications retrieved",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "applications": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/Application" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/applications/talent/{talentId}": {
+      "get": {
+        "tags": ["Applications"],
+        "summary": "Get applications by talent",
+        "parameters": [
+          {
+            "name": "talentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Talent applications retrieved",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "applications": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/Application" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Internal Server Error" }
+        }
+      }
+    },
+    "/applications/{id}/status": {
+      "put": {
+        "tags": ["Applications"],
+        "summary": "Update application status",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "reviewing",
+                    "shortlisted",
+                    "rejected",
+                    "hired"
+                  ],
+                  "example": "shortlisted"
+                },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status updated",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "application": { "$ref": "#/definitions/Application" }
+              }
+            }
+          },
+          "404": { "description": "Application not found" },
+          "500": { "description": "Internal Server Error" }
         }
       }
     }

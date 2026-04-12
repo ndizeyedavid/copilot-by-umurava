@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Screening from "../models/screening.model";
 import Jobs from "../models/jobs.model";
 import Talent from "../models/talents.model";
+import Application from "../models/application.model";
 import { IScreening } from "../types/screening.types";
 import {
   evaluateCandidates,
@@ -110,15 +111,24 @@ const screeningController = {
   async runAiScreening(req: Request, res: Response) {
     try {
       const { jobId } = req.params;
-      const { candidateIds } = req.body;
 
       const job = await Jobs.findById(jobId);
       if (!job) return res.status(404).json({ message: "Job not found" });
 
-      const query = candidateIds ? { _id: { $in: candidateIds } } : {};
-      const talents = await Talent.find(query);
-      if (!talents.length)
-        return res.status(400).json({ message: "No candidates found" });
+      // Fetch applicants for this job
+      const applications = await Application.find({ jobId });
+      if (!applications.length) {
+        return res
+          .status(400)
+          .json({ message: "No applicants found for this job" });
+      }
+
+      const talentIds = applications.map((app) => app.talentId);
+      const talents = await Talent.find({ _id: { $in: talentIds } });
+
+      if (!talents.length) {
+        return res.status(400).json({ message: "No candidate profiles found" });
+      }
 
       const jobData: JobData = {
         title: job.title,
@@ -148,9 +158,25 @@ const screeningController = {
         comparisonSummary: aiResult.comparisonSummary,
       });
 
+      // Link screening to applications and update status
+      for (const app of applications) {
+        const candidateResult = aiResult.candidates.find(
+          (c) => c.candidateId === app.talentId,
+        );
+        await Application.findByIdAndUpdate(app._id, {
+          screeningId: screening._id.toString(),
+          status:
+            candidateResult?.finalRecommendation === "Strong hire"
+              ? "shortlisted"
+              : "reviewing",
+          notes: candidateResult?.reasoning,
+        });
+      }
+
       return res.status(200).json({
-        message: `AI screening complete. ${aiResult.candidates.length} candidates ranked`,
+        message: `AI screening complete. ${aiResult.candidates.length} applicants ranked`,
         screening,
+        applicantsScreened: applications.length,
       });
     } catch (error: any) {
       return res.status(500).json({
