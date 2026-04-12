@@ -23,7 +23,7 @@ const jobsController = {
     try {
       const { jobId } = req.params;
 
-      const job = await Jobs.findById({ jobId });
+      const job = await Jobs.findById(jobId);
 
       if (!job) return res.status(404).json({ message: "No job found" });
 

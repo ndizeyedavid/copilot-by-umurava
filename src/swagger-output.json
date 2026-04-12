@@ -8,26 +8,357 @@
   "host": "localhost:3000",
   "basePath": "/api/v1/",
   "schemes": ["http", "https"],
+  "definitions": {
+    "Job": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "weights": {
+          "type": "object",
+          "properties": {
+            "skills": {
+              "type": "number"
+            },
+            "experience": {
+              "type": "number"
+            },
+            "education": {
+              "type": "string",
+              "enum": ["A2", "A1", "PhD", "A0"]
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Screening": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "jobId": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "candidateId": {
+                "type": "string"
+              },
+              "score": {
+                "type": "number"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": ["high", "medium", "low"]
+              },
+              "strength": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "gaps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "reasoning": {
+                "type": "string"
+              },
+              "comparisonNotes": {
+                "type": "string"
+              },
+              "rank": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Talent": {
+      "type": "object",
+      "properties": {
+        "_id": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "headline": {
+          "type": "string"
+        },
+        "bio": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string",
+                "enum": ["Beginner", "Intermediate", "Advanced", "Expert"]
+              },
+              "yearsOfExperience": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "proficiency": {
+                "type": "string",
+                "enum": ["Basic", "Conversational", "Fluent", "Native"]
+              }
+            }
+          }
+        },
+        "experience": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "company": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "description": {
+                "type": "string"
+              },
+              "technologies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "IsCurrent": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "education": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "institution": {
+                "type": "string"
+              },
+              "degree": {
+                "type": "string"
+              },
+              "fieldOfStudy": {
+                "type": "string"
+              },
+              "startYear": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endYear": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "certifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "issuer": {
+                "type": "string"
+              },
+              "issueDate": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "technologies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "role": {
+                "type": "string"
+              },
+              "link": {
+                "type": "string"
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "availability": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["Available", "Open", "Not Available"]
+            },
+            "type": {
+              "type": "string",
+              "enum": ["Full-time", "Part-time", "Contract"]
+            },
+            "startDate": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "socialLinks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rawCv": {
+          "type": "object"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
   "paths": {
     "/health/": {
       "get": {
+        "tags": ["Health"],
         "description": "Checking if the server and other functions are active",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Server is healthy",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
     },
     "/jobs/": {
       "get": {
-        "description": "",
+        "tags": ["Jobs"],
+        "description": "Retrieve all job postings",
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "List of jobs",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "jobs": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Job"
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "No jobs found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -35,10 +366,32 @@
         }
       },
       "post": {
-        "description": "",
+        "tags": ["Jobs"],
+        "description": "Create a new job posting",
+        "parameters": [
+          {
+            "name": "job",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Job"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "Job posting created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "job": {
+                  "$ref": "#/definitions/Job"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
@@ -46,13 +399,41 @@
         }
       },
       "put": {
-        "description": "",
+        "tags": ["Jobs"],
+        "description": "Update a job posting",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "job",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Job"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Job posting updated",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "updatedJob": {
+                  "$ref": "#/definitions/Job"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "No job found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -60,13 +441,33 @@
         }
       },
       "delete": {
-        "description": "",
+        "tags": ["Jobs"],
+        "description": "Delete a job posting",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Job Deleted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "deleteJob": {
+                  "$ref": "#/definitions/Job"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "No job found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -76,7 +477,8 @@
     },
     "/jobs/{id}": {
       "get": {
-        "description": "",
+        "tags": ["Jobs"],
+        "description": "Retrieve a specific job posting by ID",
         "parameters": [
           {
             "name": "id",
@@ -87,10 +489,197 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Job fetched",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "job": {
+                  "$ref": "#/definitions/Job"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "No job found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/screening/": {
+      "get": {
+        "tags": ["Screening"],
+        "description": "Retrieve all screenings",
+        "responses": {
+          "200": {
+            "description": "List of screenings",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "fetchedScreenings": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Screening"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/screening/{jobId}": {
+      "get": {
+        "tags": ["Screening"],
+        "description": "Retrieve screenings for a specific job",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Screenings found for the job",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "fetchedScreening": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Screening"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/screening/{screeningId}": {
+      "get": {
+        "tags": ["Screening"],
+        "description": "Retrieve a specific screening by ID",
+        "parameters": [
+          {
+            "name": "screeningId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Screening found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "fetchedScreening": {
+                  "$ref": "#/definitions/Screening"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Screening ID not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Screening"],
+        "description": "Update a screening",
+        "parameters": [
+          {
+            "name": "screeningId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "screening",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Screening"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job screening updated",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "updatedScreening": {
+                  "$ref": "#/definitions/Screening"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job Screening not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Screening"],
+        "description": "Delete a screening",
+        "parameters": [
+          {
+            "name": "screeningId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job screening deleted",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "deletedScreening": {
+                  "$ref": "#/definitions/Screening"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Job Screening not found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -100,13 +689,40 @@
     },
     "/talents/": {
       "get": {
-        "description": "",
+        "tags": ["Talents"],
+        "description": "Retrieve all talents or search by name",
+        "parameters": [
+          {
+            "name": "firstName",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "lastName",
+            "in": "query",
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "List of talents",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "talents": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Talent"
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Talent not found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -114,10 +730,32 @@
         }
       },
       "post": {
-        "description": "",
+        "tags": ["Talents"],
+        "description": "Create a new talent",
+        "parameters": [
+          {
+            "name": "talent",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Talent"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": "Created"
+            "description": "New Talent Added",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "createdTalent": {
+                  "$ref": "#/definitions/Talent"
+                }
+              }
+            }
           },
           "500": {
             "description": "Internal Server Error"
@@ -125,13 +763,41 @@
         }
       },
       "put": {
-        "description": "",
+        "tags": ["Talents"],
+        "description": "Update a talent",
+        "parameters": [
+          {
+            "name": "talentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "talent",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Talent"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Talent Updated",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "updatedTalent": {
+                  "$ref": "#/definitions/Talent"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Talent Not Found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -139,13 +805,33 @@
         }
       },
       "delete": {
-        "description": "",
+        "tags": ["Talents"],
+        "description": "Delete a talent",
+        "parameters": [
+          {
+            "name": "talentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Talent deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "deleteTalent": {
+                  "$ref": "#/definitions/Talent"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Talent not found"
           },
           "500": {
             "description": "Internal Server Error"
@@ -155,7 +841,8 @@
     },
     "/talents/{id}": {
       "get": {
-        "description": "",
+        "tags": ["Talents"],
+        "description": "Retrieve a specific talent by ID",
         "parameters": [
           {
             "name": "id",
@@ -166,10 +853,21 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "Talent Found",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "fetchedTalent": {
+                  "$ref": "#/definitions/Talent"
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Talent not found"
           },
           "500": {
             "description": "Internal Server Error"
