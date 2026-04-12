@@ -1,15 +1,5 @@
-import { Schema, model, Document } from "mongoose";
-
-interface IJob extends Document {
-  title: string;
-  description: string;
-  requirements: string[];
-  weights: {
-    skills: number;
-    experience: number;
-    education: "A2" | "A1" | "PhD" | "A0";
-  };
-}
+import { Schema, model } from "mongoose";
+import { IJob } from "../types/job.types";
 
 const jobsSchema = new Schema<IJob>(
   {
@@ -30,6 +20,6 @@ const jobsSchema = new Schema<IJob>(
   },
 );
 
-const Job = model<IJob>("Job", jobsSchema);
+const Jobs = model<IJob>("Job", jobsSchema);
 
-export default Job;
+export default Jobs;

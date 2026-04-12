@@ -7,6 +7,7 @@ import morgan from "morgan";
 import healthRouter from "./routers/health.route";
 import dbConnect from "./config/dbConnect";
 import jobsRouter from "./routers/jobs.route";
+import talentRouter from "./routers/talents.route";
 
 const app = express();
 dbConnect();
@@ -18,6 +19,6 @@ app.use(morgan("dev"));
 
 // routers
 app.use("/health", healthRouter);
-app.use("/jobs", jobsRouter);
-
+app.use("/api/v1/jobs", jobsRouter);
+app.use("/api/v1/talents", talentRouter);
 export { app };
