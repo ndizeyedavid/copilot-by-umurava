@@ -21,4 +21,5 @@ app.use(morgan("dev"));
 app.use("/health", healthRouter);
 app.use("/api/v1/jobs", jobsRouter);
 app.use("/api/v1/talents", talentRouter);
+
 export { app };

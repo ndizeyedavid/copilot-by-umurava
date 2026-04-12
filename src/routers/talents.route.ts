@@ -7,5 +7,7 @@ talentRouter.get("/", talentController.getAll);
 talentRouter.get("/:id", talentController.getById);
 talentRouter.get("/", talentController.getByName);
 talentRouter.post("/", talentController.createTalent);
+talentRouter.put("/", talentController.updateTalent);
+talentRouter.delete("/", talentController.deleteTalent);
 
 export default talentRouter;
