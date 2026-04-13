@@ -15,7 +15,7 @@ export default function HeroSection() {
             <br />
             more than
             <br />
-            <span className="text-[#286ef0]">5000+ Jobs</span>
+            <span className="text-[#286ef0]">1000+ Jobs</span>
           </h1>
 
           {/* Blue underline decoration */}
@@ -70,8 +70,23 @@ export default function HeroSection() {
             height={794}
           />
 
-          <div className="w-[401px] h-[557px] bg-amber-100 flex items-center justify-center relative z-10">
-            <p>Short here</p>
+          <Image
+            src="/images/illustrations/arrow.svg"
+            className="absolute top-[-10px] left-[-200px] scale-170 z-0 -rotate-30"
+            alt=""
+            width={200}
+            height={209}
+          />
+
+          <div className="w-[401px] h-[557px] relative z-10 overflow-hidden shadow-lg">
+            <iframe
+              width="100%"
+              height="100%"
+              src="https://www.youtube.com/embed/vDfTbBMQCcI"
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
 
           <div className="w-[283px] h-[731px] bg-[#f8f8fd] absolute p-4 bottom-[-460px] right-[-100px] z-20 rotate-50" />

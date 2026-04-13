@@ -33,7 +33,7 @@ export default function Header() {
         </a>
         <a
           href=""
-          className="px-4 py-2 text-sm font-medium text-white bg-[#286ef0] rounded hover:bg-[#2566de]"
+          className="px-5 py-2.5 text-sm font-medium text-white bg-[#286ef0]  hover:bg-[#2566de]"
         >
           Sign Up
         </a>
