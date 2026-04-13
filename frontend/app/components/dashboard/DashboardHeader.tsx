@@ -2,39 +2,35 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { Bell, Search } from "lucide-react";
 
 export default function DashboardHeader() {
   return (
-    <header
-      className={`fixed left-1/2 top-2 -translate-x-1/2 z-50 flex items-center justify-between transition-all duration-300 w-[80%] px-6 py-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100`}
-    >
-      <Link href="/">
-        <Image
-          src="/images/logo/logo.svg"
-          alt="Copilot By Umurava Logo"
-          width={110}
-          height={34}
-        />
-      </Link>
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100">
+      <div className="flex items-center justify-between px-8 py-4">
+        <Link href="/" className="shrink-0">
+          <Image
+            src="/images/logo/logo.svg"
+            alt="Copilot By Umurava Logo"
+            width={110}
+            height={20}
+          />
+        </Link>
 
-      <nav className="flex items-center gap-6 text-sm text-gray-700">
-        <a href="" className="hover:text-gray-900">
-          About Us
-        </a>
+        <div className="mx-8 w-full max-w-xl">
+          <div className="flex items-center gap-2 rounded-full bg-white px-4 py-3 shadow-sm border border-gray-100">
+            <Search className="h-4 w-4 text-gray-400" />
+            <input
+              placeholder="Search..."
+              className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+            />
+          </div>
+        </div>
 
-        <div className="w-px h-[20px] bg-black" />
-
-        <a href="" className="hover:text-gray-900">
-          Terms & Condition
-        </a>
-
-        <div className="w-[2px] h-[20px] bg-black" />
-
-        <a href="" className="hover:text-gray-900">
-          Privacy Policy
-        </a>
-      </nav>
+        <button className="h-10 w-10 rounded-full bg-white border border-gray-100 shadow-sm grid place-items-center hover:bg-gray-50 transition-colors">
+          <Bell className="h-5 w-5 text-gray-600" />
+        </button>
+      </div>
     </header>
   );
 }
