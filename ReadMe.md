@@ -2,6 +2,8 @@
 
 > An AI Recruiter system that explains, compares, and guides hiring decisions
 
+what we are solving: https://www.youtube.com/shorts/vDfTbBMQCcI
+
 # DB Structure
 
 ### 1. Jobs
