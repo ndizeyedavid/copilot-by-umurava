@@ -6,7 +6,7 @@ export default function HeroSection() {
   const popularTags = ["UI Designer", "UX Researcher", "Android", "Admin"];
 
   return (
-    <section className="relative bg-[#f8f8fd] overflow-hidden">
+    <section className="relative mt-[50px] bg-[#f8f8fd] overflow-hidden">
       <div className="relative mx-[122px] py-16 flex items-center justify-between">
         {/* Left content */}
         <div className="max-w-2xl w-full">

@@ -1,8 +1,25 @@
+"use client";
+
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 30);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="flex items-center justify-between px-[122px] py-5">
+    <header
+      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between transition-all duration-300 ${
+        scrolled
+          ? "w-[80%] px-6 py-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100"
+          : "w-full px-[122px] py-5 bg-[#f8f8fd]"
+      }`}
+    >
       <div className="flex items-center gap-8">
         <Image
           src="/images/logo/logo.svg"
