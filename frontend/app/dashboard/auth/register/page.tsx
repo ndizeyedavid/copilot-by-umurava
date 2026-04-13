@@ -1,11 +1,11 @@
-import DashboardHeader from "@/app/components/dashboard/DashboardHeader";
 import Image from "next/image";
 import RegisterForm from "./register-form";
+import AuthHeader from "@/app/components/dashboard/AuthHeader";
 
 export default function page() {
   return (
     <section className="relative min-h-screen flex overflow-hidden">
-      <DashboardHeader />
+      <AuthHeader />
 
       {/* Left side*/}
       <div className="w-1/2 bg-white relative">
