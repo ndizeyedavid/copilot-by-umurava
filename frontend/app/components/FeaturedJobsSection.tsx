@@ -18,7 +18,7 @@ const jobs: Job[] = [
     location: "Madrid, Spain",
     description: "Revolut is looking for Email Marketing to help team t ...",
     type: "Full Time",
-    logo: "/images/companies/revolut.svg",
+    logo: "/images/companies/dummy.png",
     tags: [
       { name: "Marketing", color: "bg-orange-100 text-orange-600" },
       { name: "Design", color: "bg-green-100 text-green-600" },
@@ -30,7 +30,7 @@ const jobs: Job[] = [
     location: "San Francisco, US",
     description: "Dropbox is looking for Brand Designer to help the team t ...",
     type: "Full Time",
-    logo: "/images/companies/dropbox.svg",
+    logo: "/images/companies/dummy.png",
     tags: [
       { name: "Design", color: "bg-green-100 text-green-600" },
       { name: "Business", color: "bg-purple-100 text-purple-600" },
@@ -40,27 +40,30 @@ const jobs: Job[] = [
     title: "Email Marketing",
     company: "Pitch",
     location: "Berlin, Germany",
-    description: "Pitch is looking for Customer Manager to join marketing t ...",
+    description:
+      "Pitch is looking for Customer Manager to join marketing t ...",
     type: "Full Time",
-    logo: "/images/companies/pitch.svg",
+    logo: "/images/companies/dummy.png",
     tags: [{ name: "Marketing", color: "bg-orange-100 text-orange-600" }],
   },
   {
     title: "Visual Designer",
     company: "Blinkist",
     location: "Granada, Spain",
-    description: "Blinkist is looking for Visual Designer to help team desi ...",
+    description:
+      "Blinkist is looking for Visual Designer to help team desi ...",
     type: "Full Time",
-    logo: "/images/companies/blinkist.svg",
+    logo: "/images/companies/dummy.png",
     tags: [{ name: "Design", color: "bg-green-100 text-green-600" }],
   },
   {
     title: "Product Designer",
     company: "ClassPass",
     location: "Manchester, UK",
-    description: "ClassPass is looking for Product Designer to help develop n ...",
+    description:
+      "ClassPass is looking for Product Designer to help develop n ...",
     type: "Full Time",
-    logo: "/images/companies/classpass.svg",
+    logo: "/images/companies/dummy.png",
     tags: [
       { name: "Marketing", color: "bg-orange-100 text-orange-600" },
       { name: "Design", color: "bg-green-100 text-green-600" },
@@ -72,7 +75,7 @@ const jobs: Job[] = [
     location: "Ontario, Canada",
     description: "Canva is looking for Lead Engineer to help develop n ...",
     type: "Full Time",
-    logo: "/images/companies/canva.svg",
+    logo: "/images/companies/dummy.png",
     tags: [
       { name: "Design", color: "bg-green-100 text-green-600" },
       { name: "Business", color: "bg-purple-100 text-purple-600" },
@@ -84,7 +87,7 @@ const jobs: Job[] = [
     location: "Marseille, France",
     description: "GoDaddy is looking for Brand Strategist to join the team...",
     type: "Full Time",
-    logo: "/images/companies/godaddy.svg",
+    logo: "/images/companies/dummy.png",
     tags: [{ name: "Marketing", color: "bg-orange-100 text-orange-600" }],
   },
   {
@@ -93,7 +96,7 @@ const jobs: Job[] = [
     location: "San Diego, US",
     description: "Twitter is looking for Data Analyst to help team desi ...",
     type: "Full Time",
-    logo: "/images/companies/twitter.svg",
+    logo: "/images/companies/dummy.png",
     tags: [{ name: "Technology", color: "bg-red-100 text-red-600" }],
   },
 ];
@@ -143,9 +146,7 @@ export default function FeaturedJobsSection() {
               <h3 className="text-lg font-semibold text-[#25324B] mb-1">
                 {job.title}
               </h3>
-              <p className="text-sm text-gray-500 mb-3">
-                {job.company} · {job.location}
-              </p>
+              <p className="text-sm text-gray-500 mb-3">{job.location}</p>
 
               {/* Description */}
               <p className="text-sm text-gray-400 mb-4 line-clamp-2">

@@ -133,3 +133,7 @@ body,
 html {
   background-color: #f8f8fd !important;
 }
+
+* {
+  scrollbar-color: #555 #1e1e1e;
+}
