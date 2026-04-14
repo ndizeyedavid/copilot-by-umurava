@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import ScreeningStepper from "./screening/ScreeningStepper";
 import ScreeningHistoryStep, {
@@ -8,20 +9,13 @@ import ScreeningHistoryStep, {
 import JobSelectionStep, { JobSummary } from "./screening/JobSelectionStep";
 import SourceSelectionStep from "./screening/SourceSelectionStep";
 import ProcessingStep from "./screening/ProcessingStep";
-import ResultsStep, { CandidateResult } from "./screening/ResultsStep";
 
-type ScreeningStep =
-  | "history"
-  | "select_job"
-  | "select_source"
-  | "processing"
-  | "results";
+type ScreeningStep = "history" | "select_job" | "select_source" | "processing";
 
 const STEPS = [
   { id: "select_job", label: "Select Job" },
   { id: "select_source", label: "Source" },
   { id: "processing", label: "Screening" },
-  { id: "results", label: "Results" },
 ];
 
 const LOADING_MESSAGES = [
@@ -41,6 +35,7 @@ export default function AdminJobScreeningPage({
 }: {
   jobId?: string;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState<ScreeningStep>(
     initialJobId ? "select_source" : "history",
   );
@@ -48,12 +43,6 @@ export default function AdminJobScreeningPage({
     initialJobId || "",
   );
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
-  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(
-    null,
-  );
-  const [selectedForEmail, setSelectedForEmail] = useState<string[]>([]);
-  const [isSendingEmails, setIsSendingEmails] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   // Mock History
   const screeningHistory: SavedScreening[] = [
@@ -97,58 +86,6 @@ export default function AdminJobScreeningPage({
     },
   ];
 
-  // Mock results data
-  const results: CandidateResult[] = [
-    {
-      candidateId: "can_1",
-      name: "Justin Lipshutz",
-      rank: 1,
-      matchScore: 94,
-      confidence: "high",
-      strengths: [
-        "Expert React/Next.js knowledge",
-        "Led teams of 10+",
-        "Strong UI/UX background",
-      ],
-      gaps: ["Limited exposure to AWS Lambda"],
-      reasoning:
-        "Justin exceeds all primary requirements for the Senior Frontend role. His experience at Umurava directly aligns with our tech stack.",
-      finalRecommendation: "Highly Recommend - Immediate Interview",
-      comparisonNotes: "Strongest technical background among all applicants.",
-    },
-    {
-      candidateId: "can_2",
-      name: "Marcus Culhane",
-      rank: 2,
-      matchScore: 88,
-      confidence: "high",
-      strengths: [
-        "Strong TypeScript skills",
-        "Great communication",
-        "Open source contributor",
-      ],
-      gaps: ["No direct experience with Micro-frontends"],
-      reasoning:
-        "Very solid engineer. Technical test was nearly perfect. Lacks the same level of leadership experience as candidate #1.",
-      finalRecommendation: "Recommend - Technical Interview",
-    },
-    {
-      candidateId: "can_3",
-      name: "Sofia Rodriguez",
-      rank: 3,
-      matchScore: 75,
-      confidence: "medium",
-      strengths: ["Excellent UX Research skills", "Prototyping expert"],
-      gaps: [
-        "Weaker in heavy state management (Redux/Zustand)",
-        "Mostly design-focused",
-      ],
-      reasoning:
-        "Great profile but might be better suited for a Product Designer role. Technical skills are adequate but not 'Senior' level for this specific engineering track.",
-      finalRecommendation: "Consider - Portfolio Review",
-    },
-  ];
-
   useEffect(() => {
     if (step === "processing") {
       const interval = setInterval(() => {
@@ -156,7 +93,10 @@ export default function AdminJobScreeningPage({
       }, 2500);
 
       const timer = setTimeout(() => {
-        setStep("results");
+        // Redirect to results page instead of staying on same page
+        const mockScreeningId =
+          "scr_" + Math.random().toString(36).substr(2, 9);
+        router.push(`/admin/screening/${mockScreeningId}`);
         clearInterval(interval);
       }, 10000);
 
@@ -165,22 +105,7 @@ export default function AdminJobScreeningPage({
         clearTimeout(timer);
       };
     }
-  }, [step]);
-
-  const handleSendEmails = () => {
-    setIsSendingEmails(true);
-    setTimeout(() => {
-      setIsSendingEmails(false);
-      setEmailSent(true);
-      setTimeout(() => setEmailSent(false), 3000);
-    }, 2000);
-  };
-
-  const toggleCandidateEmail = (id: string) => {
-    setSelectedForEmail((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
-    );
-  };
+  }, [step, router]);
 
   return (
     <div className="space-y-6">
@@ -205,7 +130,7 @@ export default function AdminJobScreeningPage({
       {step === "history" && (
         <ScreeningHistoryStep
           screenings={screeningHistory}
-          onView={(id) => setStep("results")}
+          onView={(id) => router.push(`/admin/screening/${id}`)}
           onReRun={(id) => setStep("processing")}
           onStartNew={() => setStep("select_job")}
         />
@@ -233,25 +158,6 @@ export default function AdminJobScreeningPage({
         <ProcessingStep
           message={LOADING_MESSAGES[loadingMsgIndex]}
           progress={((loadingMsgIndex + 1) * 100) / LOADING_MESSAGES.length}
-        />
-      )}
-
-      {step === "results" && (
-        <ResultsStep
-          results={results}
-          selectedForEmail={selectedForEmail}
-          isSendingEmails={isSendingEmails}
-          emailSent={emailSent}
-          expandedCandidate={expandedCandidate}
-          onToggleEmail={toggleCandidateEmail}
-          onToggleExpand={setExpandedCandidate}
-          onSendEmails={handleSendEmails}
-          onRestart={() => {
-            setStep("history");
-            setSelectedJobId("");
-            setSelectedForEmail([]);
-          }}
-          onBack={() => setStep("history")}
         />
       )}
     </div>
