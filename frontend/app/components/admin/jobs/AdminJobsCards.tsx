@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { Briefcase, CalendarDays, Eye, MapPin, Users } from "lucide-react";
 import type { AdminJobRow } from "@/app/components/admin/jobs/AdminJobsTable";
+import AdminJobActionsMenu from "@/app/components/admin/jobs/AdminJobActionsMenu";
 
 function statusClasses(status: AdminJobRow["status"]) {
   if (status === "Open") return "bg-green-100 text-green-700 border-green-200";
@@ -11,7 +13,8 @@ function statusClasses(status: AdminJobRow["status"]) {
 
 function typeClasses(type: AdminJobRow["type"]) {
   if (type === "Full-time") return "bg-blue-50 text-blue-700 border-blue-100";
-  if (type === "Part-time") return "bg-purple-50 text-purple-700 border-purple-100";
+  if (type === "Part-time")
+    return "bg-purple-50 text-purple-700 border-purple-100";
   if (type === "Contract") return "bg-amber-50 text-amber-700 border-amber-100";
   return "bg-pink-50 text-pink-700 border-pink-100";
 }
@@ -21,7 +24,10 @@ export default function AdminJobsCards({
   onAction,
 }: {
   rows: AdminJobRow[];
-  onAction: (action: "edit" | "close" | "open" | "delete", row: AdminJobRow) => void;
+  onAction: (
+    action: "edit" | "close" | "open" | "delete",
+    row: AdminJobRow,
+  ) => void;
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -32,14 +38,19 @@ export default function AdminJobsCards({
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-[#25324B]">{row.title}</p>
+              <p className="truncate text-sm font-semibold text-[#25324B]">
+                {row.title}
+              </p>
               <p className="truncate text-xs text-[#7C8493]">{row.company}</p>
             </div>
-            <span
-              className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(row.status)}`}
-            >
-              {row.status}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${statusClasses(row.status)}`}
+              >
+                {row.status}
+              </span>
+              <AdminJobActionsMenu row={row} onAction={onAction} />
+            </div>
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
@@ -61,57 +72,36 @@ export default function AdminJobsCards({
                 <Users className="h-4 w-4" />
                 Applicants
               </div>
-              <p className="mt-1 text-sm font-bold text-[#25324B]">{row.applicants}</p>
+              <p className="mt-1 text-sm font-bold text-[#25324B]">
+                {row.applicants}
+              </p>
             </div>
             <div className="rounded-xl border border-gray-100 bg-[#F8F8FD] p-3">
               <div className="flex items-center gap-2 text-xs text-[#7C8493]">
                 <Eye className="h-4 w-4" />
                 Views
               </div>
-              <p className="mt-1 text-sm font-bold text-[#25324B]">{row.views}</p>
+              <p className="mt-1 text-sm font-bold text-[#25324B]">
+                {row.views}
+              </p>
             </div>
             <div className="rounded-xl border border-gray-100 bg-[#F8F8FD] p-3">
               <div className="flex items-center gap-2 text-xs text-[#7C8493]">
                 <CalendarDays className="h-4 w-4" />
                 Deadline
               </div>
-              <p className="mt-1 text-sm font-bold text-[#25324B]">{row.deadline}</p>
+              <p className="mt-1 text-sm font-bold text-[#25324B]">
+                {row.deadline}
+              </p>
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={() => onAction("edit", row)}
-              className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
-            >
-              Edit
-            </button>
-            {row.status !== "Closed" ? (
-              <button
-                type="button"
-                onClick={() => onAction("close", row)}
-                className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
-              >
-                Close
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onAction("open", row)}
-                className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
-              >
-                Reopen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => onAction("delete", row)}
-              className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100"
-            >
-              Delete
-            </button>
-          </div>
+          <Link
+            href={`/admin/jobs/${row.id}`}
+            className="mt-4 block w-full rounded-xl bg-[#F3F4FF] px-4 py-2 text-center text-sm font-semibold text-[#286ef0] hover:bg-[#E8EAFF]"
+          >
+            View job details
+          </Link>
         </div>
       ))}
 

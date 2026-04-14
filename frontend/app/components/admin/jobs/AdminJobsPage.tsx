@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import AdminJobsCards from "@/app/components/admin/jobs/AdminJobsCards";
 import AdminJobsTable, {
@@ -141,6 +142,8 @@ function compare(a: AdminJobRow, b: AdminJobRow, key: SortKey) {
 }
 
 export default function AdminJobsPage() {
+  const router = useRouter();
+
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
@@ -202,10 +205,13 @@ export default function AdminJobsPage() {
   const onNext = () => setPage((p) => Math.min(totalPages - 1, p + 1));
 
   const onRowAction = (
-    action: "edit" | "close" | "open" | "delete",
+    action: "view" | "edit" | "close" | "open" | "delete",
     row: AdminJobRow,
   ) => {
     console.log("job action", action, row);
+    if (action == "view") {
+      router.push("/admin/jobs/" + row.id);
+    }
   };
 
   return (

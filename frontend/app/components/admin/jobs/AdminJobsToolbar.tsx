@@ -1,6 +1,13 @@
 "use client";
 
-import { LayoutGrid, List, Plus, Search, SlidersHorizontal } from "lucide-react";
+import Link from "next/link";
+import {
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 
 export default function AdminJobsToolbar({
   query,
@@ -32,17 +39,19 @@ export default function AdminJobsToolbar({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xl font-semibold text-[#25324B]">Jobs</p>
-          <p className="text-sm text-[#7C8493]">Manage job posts, status, and performance</p>
+          <p className="text-sm text-[#7C8493]">
+            Manage job posts, status, and performance
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Link
+            href="/admin/jobs/new"
             className="inline-flex items-center gap-2 rounded-xl bg-[#286ef0] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1f5fe0]"
           >
             <Plus className="h-4 w-4" />
             Create Job
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -100,13 +109,17 @@ export default function AdminJobsToolbar({
         </div>
 
         <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
-          <span className="text-sm font-semibold text-[#25324B]">{totalLabel}</span>
+          <span className="text-sm font-semibold text-[#25324B]">
+            {totalLabel}
+          </span>
           <div className="flex items-center gap-1 rounded-lg bg-[#F8F8FD] p-1">
             <button
               type="button"
               onClick={() => onViewMode("table")}
               className={`rounded-md p-2 transition-colors ${
-                viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-white/70"
+                viewMode === "table"
+                  ? "bg-white shadow-sm"
+                  : "hover:bg-white/70"
               }`}
               aria-label="Table view"
             >
@@ -116,7 +129,9 @@ export default function AdminJobsToolbar({
               type="button"
               onClick={() => onViewMode("cards")}
               className={`rounded-md p-2 transition-colors ${
-                viewMode === "cards" ? "bg-white shadow-sm" : "hover:bg-white/70"
+                viewMode === "cards"
+                  ? "bg-white shadow-sm"
+                  : "hover:bg-white/70"
               }`}
               aria-label="Card view"
             >

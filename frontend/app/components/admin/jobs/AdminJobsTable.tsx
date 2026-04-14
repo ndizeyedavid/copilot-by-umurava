@@ -8,6 +8,9 @@ import {
   type SortingState,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
+
+import AdminJobActionsMenu from "@/app/components/admin/jobs/AdminJobActionsMenu";
 
 export type AdminJobRow = {
   id: string;
@@ -53,7 +56,7 @@ export default function AdminJobsTable({
   onPrev: () => void;
   onNext: () => void;
   onRowAction: (
-    action: "edit" | "close" | "open" | "delete",
+    action: "view" | "edit" | "close" | "open" | "delete",
     row: AdminJobRow,
   ) => void;
 }) {
@@ -67,9 +70,12 @@ export default function AdminJobsTable({
         meta: { sortKey: "title" satisfies SortKey },
         cell: ({ row }) => (
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[#25324B]">
+            <Link
+              href={`/admin/jobs/${row.original.id}`}
+              className="truncate text-sm font-semibold text-[#25324B] hover:underline"
+            >
               {row.original.title}
-            </p>
+            </Link>
             <p className="truncate text-xs text-[#7C8493]">
               {row.original.location} • {row.original.type}
             </p>
@@ -145,38 +151,8 @@ export default function AdminJobsTable({
         header: () => <div className="text-right">Actions</div>,
         enableSorting: false,
         cell: ({ row }) => (
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => onRowAction("edit", row.original)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-[#25324B] hover:bg-gray-50"
-            >
-              Edit
-            </button>
-            {row.original.status !== "Closed" ? (
-              <button
-                type="button"
-                onClick={() => onRowAction("close", row.original)}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-[#25324B] hover:bg-gray-50"
-              >
-                Close
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => onRowAction("open", row.original)}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-[#25324B] hover:bg-gray-50"
-              >
-                Reopen
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => onRowAction("delete", row.original)}
-              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
-            >
-              Delete
-            </button>
+          <div className="flex justify-end">
+            <AdminJobActionsMenu row={row.original} onAction={onRowAction} />
           </div>
         ),
       },
