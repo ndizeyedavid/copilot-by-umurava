@@ -19,35 +19,95 @@
   "definitions": {
     "Job": {
       "type": "object",
+      "required": [
+        "title",
+        "description",
+        "requirements",
+        "weights",
+        "deadline",
+        "jobType",
+        "locationType",
+        "salary"
+      ],
       "properties": {
         "_id": {
           "type": "string"
         },
         "title": {
-          "type": "string"
+          "type": "string",
+          "example": "Senior Full Stack Developer"
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "example": "We are looking for an experienced developer..."
         },
         "requirements": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "example": [
+            "5+ years Node.js",
+            "React expertise",
+            "MongoDB experience"
+          ]
         },
         "weights": {
           "type": "object",
           "properties": {
             "skills": {
-              "type": "number"
+              "type": "number",
+              "example": 0.4
             },
             "experience": {
-              "type": "number"
+              "type": "number",
+              "example": 0.4
             },
             "education": {
-              "type": "number"
+              "type": "number",
+              "example": 0.2
             }
           }
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-05-01T00:00:00.000Z"
+        },
+        "jobType": {
+          "type": "string",
+          "enum": ["full-time", "part-time"],
+          "example": "full-time"
+        },
+        "locationType": {
+          "type": "string",
+          "enum": ["on-site", "hybrid", "remote"],
+          "example": "hybrid"
+        },
+        "salary": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "example": 5000
+            },
+            "currency": {
+              "type": "string",
+              "enum": ["USD", "RWF"],
+              "example": "USD"
+            }
+          }
+        },
+        "benefits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "example": [
+            "Health insurance",
+            "Remote work allowance",
+            "Annual bonus"
+          ]
         },
         "createdAt": {
           "type": "string",

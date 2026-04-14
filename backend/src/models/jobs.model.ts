@@ -3,14 +3,26 @@ import { IJob } from "../types/job.types";
 
 const jobsSchema = new Schema<IJob>(
   {
-    title: String,
-    description: String,
-    requirements: [String],
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    requirements: { type: [String], required: true },
     weights: {
-      skills: Number,
-      experience: Number,
-      education: Number,
+      skills: { type: Number, required: true },
+      experience: { type: Number, required: true },
+      education: { type: Number, required: true },
     },
+    deadline: { type: Date, required: true },
+    jobType: { type: String, enum: ["full-time", "part-time"], required: true },
+    locationType: {
+      type: String,
+      enum: ["on-site", "hybrid", "remote"],
+      required: true,
+    },
+    salary: {
+      amount: { type: Number, required: true },
+      currency: { type: String, enum: ["USD", "RWF"], required: true },
+    },
+    benefits: { type: [String], default: [] },
   },
   {
     timestamps: true,
