@@ -512,6 +512,71 @@
           "format": "date-time"
         }
       }
+    },
+    "ExternalScreeningResult": {
+      "type": "object",
+      "properties": {
+        "screeningId": { "type": "string" },
+        "jobId": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "processing", "completed", "failed"]
+        },
+        "totalApplicants": { "type": "integer" },
+        "processedApplicants": { "type": "integer" },
+        "topCandidates": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ExternalScreeningCandidate" }
+        },
+        "progress": { "type": "integer", "description": "Percentage complete" }
+      }
+    },
+    "ExternalScreeningCandidate": {
+      "type": "object",
+      "properties": {
+        "applicantId": { "type": "string" },
+        "matchScore": { "type": "number", "example": 85.5 },
+        "skillsMatch": { "type": "number", "example": 90.0 },
+        "experienceMatch": { "type": "number", "example": 80.0 },
+        "educationMatch": { "type": "number", "example": 85.0 },
+        "reasoning": {
+          "type": "string",
+          "example": "Strong technical skills match..."
+        },
+        "strengths": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": ["React expertise", "5 years Node.js"]
+        },
+        "gaps": {
+          "type": "array",
+          "items": { "type": "string" },
+          "example": ["No AWS experience"]
+        },
+        "recommendation": {
+          "type": "string",
+          "enum": [
+            "highly_recommended",
+            "recommended",
+            "consider",
+            "not_suitable"
+          ]
+        }
+      }
+    },
+    "ExternalScreeningSummary": {
+      "type": "object",
+      "properties": {
+        "_id": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "processing", "completed", "failed"]
+        },
+        "totalApplicants": { "type": "integer" },
+        "processedApplicants": { "type": "integer" },
+        "sourceFile": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "paths": {
@@ -1773,6 +1838,163 @@
           },
           "401": { "description": "Not authenticated" },
           "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/external-screening/upload": {
+      "post": {
+        "tags": ["External Screening"],
+        "summary": "Upload spreadsheet and start screening",
+        "description": "Upload CSV/Excel file with external applicants and start AI screening process",
+        "consumes": ["multipart/form-data"],
+        "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "CSV or Excel file (.csv, .xlsx, .xls)"
+          },
+          {
+            "name": "jobId",
+            "in": "formData",
+            "type": "string",
+            "required": true,
+            "description": "Job ID to screen against"
+          },
+          {
+            "name": "topN",
+            "in": "formData",
+            "type": "integer",
+            "default": 10,
+            "description": "Number of top candidates to return"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Screening started",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "screeningId": { "type": "string" },
+                "totalApplicants": { "type": "integer" },
+                "status": { "type": "string" }
+              }
+            }
+          },
+          "400": { "description": "Invalid file or missing fields" },
+          "404": { "description": "Job not found" },
+          "500": { "description": "Screening failed" }
+        }
+      }
+    },
+    "/external-screening/results/{screeningId}": {
+      "get": {
+        "tags": ["External Screening"],
+        "summary": "Get screening results",
+        "description": "Returns top candidates and screening progress",
+        "parameters": [
+          {
+            "name": "screeningId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Screening results",
+            "schema": {
+              "$ref": "#/definitions/ExternalScreeningResult"
+            }
+          },
+          "404": { "description": "Screening not found" }
+        }
+      }
+    },
+    "/external-screening/results/{screeningId}/detailed": {
+      "get": {
+        "tags": ["External Screening"],
+        "summary": "Get detailed screening results",
+        "description": "Returns all candidates with pagination",
+        "parameters": [
+          {
+            "name": "screeningId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "default": 50
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "type": "integer",
+            "default": 0
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed screening results",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "screeningId": { "type": "string" },
+                "jobId": { "type": "string" },
+                "status": { "type": "string" },
+                "results": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/ExternalScreeningCandidate"
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "skip": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Screening not found" }
+        }
+      }
+    },
+    "/external-screening/job/{jobId}": {
+      "get": {
+        "tags": ["External Screening"],
+        "summary": "Get screenings for job",
+        "description": "List all external screening sessions for a job",
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of screenings",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "screenings": {
+                  "type": "array",
+                  "items": { "$ref": "#/definitions/ExternalScreeningSummary" }
+                }
+              }
+            }
+          },
+          "500": { "description": "Failed to get screenings" }
         }
       }
     }
