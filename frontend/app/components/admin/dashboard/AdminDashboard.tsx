@@ -11,6 +11,7 @@ export default function AdminDashboard() {
     totalJobs: 54,
     openJobs: 32,
     closedJobs: 22,
+    candidates: 122,
   };
 
   const jobStats = [
@@ -138,6 +139,7 @@ export default function AdminDashboard() {
         totalJobs={kpis.totalJobs}
         openJobs={kpis.openJobs}
         closedJobs={kpis.closedJobs}
+        candidates={kpis.candidates}
       />
 
       <AdminJobStatisticsChart data={jobStats} rangeLabel="This Month" />

@@ -8,7 +8,9 @@ import {
   Briefcase,
   CheckCircle2,
   FileText,
+  Paperclip,
   Plus,
+  UserSquare2,
 } from "lucide-react";
 
 type Card = {
@@ -31,10 +33,12 @@ export default function AdminKpiCards({
   totalJobs,
   openJobs,
   closedJobs,
+  candidates,
 }: {
   totalJobs: number;
   openJobs: number;
   closedJobs: number;
+  candidates: number;
 }) {
   const cards: Card[] = [
     {
@@ -42,36 +46,32 @@ export default function AdminKpiCards({
       value: totalJobs,
       href: "/admin/jobs",
       variant: "blue",
-      icon: <Briefcase className="h-6 w-6 text-white/90" />,
+      icon: <Briefcase className="h-[90px] w-[90px] text-white/90" />,
       right: <ArrowUpRight className="h-5 w-5 text-white/90" />,
     },
     {
       label: "Open Jobs",
       value: openJobs,
       href: "/admin/jobs?status=open",
-      variant: "navy",
-      icon: <FileText className="h-6 w-6 text-white/90" />,
+      variant: "green",
+      icon: <FileText className="h-[90px] w-[90px] text-white/90" />,
       right: <ArrowUpRight className="h-5 w-5 text-white/90" />,
     },
     {
-      label: "Closed Jobs",
+      label: "Applications",
       value: closedJobs,
       href: "/admin/jobs?status=closed",
-      variant: "green",
-      icon: <CheckCircle2 className="h-6 w-6 text-white/90" />,
+      variant: "navy",
+      icon: <Paperclip className="h-[90px] w-[90px] text-white/90" />,
       right: <ArrowUpRight className="h-5 w-5 text-white/90" />,
     },
     {
-      label: "Create New Job",
-      value: 0,
-      href: "/admin/jobs/new",
+      label: "Candidates",
+      value: candidates,
+      href: "/admin/candidates",
       variant: "sky",
-      icon: <Plus className="h-6 w-6 text-white/90" />,
-      right: (
-        <span className="rounded-lg bg-white/15 px-4 py-2 text-xs font-semibold text-white">
-          Create Job
-        </span>
-      ),
+      icon: <UserSquare2 className="h-[90px] w-[90px] text-white/90" />,
+      right: <ArrowUpRight className="h-5 w-5 text-white/90" />,
     },
   ];
 
@@ -80,24 +80,23 @@ export default function AdminKpiCards({
       {cards.map((card) => {
         const content = (
           <div
-            className={`${variantClasses(card.variant)} relative overflow-hidden rounded-2xl p-6 text-white shadow-sm`}
+            className={`${variantClasses(card.variant)} relative overflow-hidden rounded-xl p-4 text-white shadow-sm flex justify-between items-center`}
           >
             <div className="flex items-start justify-between">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15">
+              <div className="absolute top-7 left-0 opacity-50">
                 {card.icon}
               </div>
-              {card.right}
             </div>
-            <div className="mt-6">
+            <div className="mt-6 text-center">
               <p className="text-sm font-medium text-white/80">{card.label}</p>
               {card.label === "Create New Job" ? (
                 <p className="mt-1 text-2xl font-bold">&nbsp;</p>
               ) : (
-                <p className="mt-1 text-3xl font-bold">{card.value}</p>
+                <p className="mt-1 text-5xl font-bold">{card.value}</p>
               )}
             </div>
-            <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-            <div className="pointer-events-none absolute -bottom-14 -left-10 h-44 w-44 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute -right-[80px] -top-[110px] h-40 w-40 rounded-full bg-white/10" />
+            {/* <div className="pointer-events-none absolute -bottom-14 -left-10 h-44 w-44 rounded-full bg-white/10" /> */}
           </div>
         );
 
