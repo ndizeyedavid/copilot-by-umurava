@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import bcrypt from "bcrypt";
 import ENV from "../config/env";
 import {
   generateTokens,
@@ -198,7 +199,17 @@ const authController = {
           .json({ message: "User already exists with this email" });
       }
 
-      const user = await createUser(email, firstName, lastName, role, password);
+      // Hash password before saving
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const user = await createUser(
+        email,
+        firstName,
+        lastName,
+        role,
+        hashedPassword,
+      );
       const tokens = generateTokens(user);
 
       return res.status(201).json({
@@ -236,7 +247,8 @@ const authController = {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
-      const isMatch = await (user as any).comparePassword(password);
+      // Compare password using bcrypt
+      const isMatch = await bcrypt.compare(password, user.password || "");
       if (!isMatch) {
         return res.status(401).json({ message: "Invalid email or password" });
       }

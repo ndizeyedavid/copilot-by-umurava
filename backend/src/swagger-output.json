@@ -1483,10 +1483,10 @@
         }
       }
     },
-    "/auth/register": {
+    "/auth/register/google": {
       "post": {
         "tags": ["Authentication"],
-        "summary": "Register new user",
+        "summary": "Register with Google OAuth",
         "description": "Create a new user account with Google profile data",
         "parameters": [
           {
@@ -1498,7 +1498,7 @@
               "properties": {
                 "googleProfile": {
                   "type": "object",
-                  "description": "Google profile data"
+                  "description": "Google profile data from OAuth"
                 },
                 "role": {
                   "type": "string",
@@ -1521,6 +1521,99 @@
           },
           "400": { "description": "Missing required fields" },
           "500": { "description": "Registration failed" }
+        }
+      }
+    },
+    "/auth/register/local": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register with Email/Password",
+        "description": "Create a new user account with email and password",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                },
+                "password": {
+                  "type": "string",
+                  "description": "Plain password (hashed server-side)",
+                  "example": "SecurePass123!"
+                },
+                "firstName": {
+                  "type": "string",
+                  "example": "John"
+                },
+                "lastName": {
+                  "type": "string",
+                  "example": "Doe"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": ["talent", "admin"],
+                  "example": "talent"
+                }
+              },
+              "required": ["email", "password", "firstName", "role"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "400": { "description": "Missing required fields or user exists" },
+          "500": { "description": "Registration failed" }
+        }
+      }
+    },
+    "/auth/login/local": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login with Email/Password",
+        "description": "Authenticate user with email and password",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "example": "user@example.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "SecurePass123!"
+                }
+              },
+              "required": ["email", "password"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "schema": {
+              "$ref": "#/definitions/AuthResponse"
+            }
+          },
+          "400": { "description": "Missing email or password" },
+          "401": {
+            "description": "Invalid credentials or account deactivated"
+          },
+          "500": { "description": "Login failed" }
         }
       }
     },
