@@ -17,8 +17,8 @@ export default function Header() {
     <header
       className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between transition-all duration-300 ${
         scrolled
-          ? "w-[80%] px-6 py-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg border border-gray-100"
-          : "w-full px-[122px] py-5 bg-[#f8f8fd]"
+          ? "w-[80%] px-6 py-3 bg-card/90 backdrop-blur-md rounded-full shadow-lg border border-border"
+          : "w-full px-[122px] py-5 bg-background"
       }`}
     >
       <div className="flex items-center gap-8">
@@ -29,14 +29,14 @@ export default function Header() {
           height={34}
         />
 
-        <nav className="flex items-center gap-6 text-sm text-gray-700">
-          <a href="" className="hover:text-gray-900">
+        <nav className="flex items-center gap-6 text-sm text-foreground">
+          <a href="" className="hover:text-foreground/80">
             Find Jobs
           </a>
-          <a href="" className="hover:text-gray-900">
+          <a href="" className="hover:text-foreground/80">
             About
           </a>
-          <a href="" className="hover:text-gray-900">
+          <a href="" className="hover:text-foreground/80">
             Contact
           </a>
         </nav>
@@ -45,13 +45,13 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <Link
           href="/dashboard/auth/login"
-          className="text-sm font-bold text-[#286ef0] hover:text-[#4338CA]"
+          className="text-sm font-bold text-primary hover:text-primary/80"
         >
           Login
         </Link>
         <a
           href=""
-          className="px-5 py-2.5 text-sm font-medium text-white bg-[#286ef0]  hover:bg-[#2566de]"
+          className="px-5 py-2.5 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/80"
         >
           Sign Up
         </a>

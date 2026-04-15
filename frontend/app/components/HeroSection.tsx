@@ -6,16 +6,16 @@ export default function HeroSection() {
   const popularTags = ["UI Designer", "UX Researcher", "Android", "Admin"];
 
   return (
-    <section className="relative mt-[50px] bg-[#f8f8fd] overflow-hidden">
+    <section className="relative mt-[50px] bg-background overflow-hidden">
       <div className="relative mx-[122px] py-16 flex items-center justify-between">
         {/* Left content */}
         <div className="max-w-2xl w-full">
-          <h1 className="text-[70px] font-bold text-[#25324B] leading-tight">
+          <h1 className="text-[70px] font-bold text-foreground leading-tight">
             Discover
             <br />
             more than
             <br />
-            <span className="text-[#286ef0]">1000+ Jobs</span>
+            <span className="text-primary">1000+ Jobs</span>
           </h1>
 
           {/* Blue underline decoration */}
@@ -24,36 +24,36 @@ export default function HeroSection() {
             alt="Underline"
             className=""
           />
-          <p className="text-gray-500 text-base mb-8 leading-relaxed pt-5">
+          <p className="text-muted-foreground text-base mb-8 leading-relaxed pt-5">
             Great platform for the job seeker that searching for
             <br />
             new career heights and passionate about startups.
           </p>
 
           {/* Search bar */}
-          <div className="flex items-center bg-white shadow-sm border border-gray-100 overflow-hidden max-w-lg w-full">
-            <div className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-100">
-              <Search className="w-5 h-10 text-gray-400" />
+          <div className="flex items-center bg-card shadow-sm border border-border overflow-hidden max-w-lg w-full">
+            <div className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-border">
+              <Search className="w-5 h-10 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Job title or keyword"
-                className="text-sm text-gray-500 placeholder-gray-400 outline-none w-full"
+                className="text-sm text-muted-foreground placeholder-muted outline-none w-full"
               />
             </div>
 
-            <button className="mx-2 bg-[#286ef0] hover:bg-[#2566de] text-white px-6 py-4">
+            <button className="mx-2 bg-primary hover:bg-primary/80 text-primary-foreground px-6 py-4">
               Search my job
             </button>
           </div>
 
           {/* Popular tags */}
           <div className="mt-4 flex items-center gap-2 text-sm">
-            <span className="text-gray-400">Popular :</span>
+            <span className="text-muted-foreground">Popular :</span>
             {popularTags.map((tag, index) => (
-              <span key={tag} className="text-gray-500">
+              <span key={tag} className="text-foreground">
                 {tag}
                 {index < popularTags.length - 1 && (
-                  <span className="text-gray-400">, </span>
+                  <span className="text-muted-foreground">, </span>
                 )}
               </span>
             ))}
@@ -89,7 +89,7 @@ export default function HeroSection() {
             />
           </div>
 
-          <div className="w-[283px] h-[731px] bg-[#f8f8fd] absolute p-4 bottom-[-460px] right-[-100px] z-20 rotate-50" />
+          <div className="w-[283px] h-[731px] bg-background absolute p-4 bottom-[-460px] right-[-100px] z-20 rotate-50" />
         </div>
       </div>
     </section>

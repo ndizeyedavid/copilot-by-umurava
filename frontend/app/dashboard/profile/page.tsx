@@ -237,448 +237,233 @@ export default function ProfilePage() {
   const suggestions = getProfileSuggestions();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#F8FAFC] p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
         
-        {/* HEADER SECTION - Profile Summary Card */}
-        <Card className="overflow-hidden">
-          <div className="bg-gray-100 h-32" />
-          <div className="px-8 pb-8">
-            <div className="flex items-start justify-between -mt-16">
-              <div className="flex items-end space-x-6">
-                {/* Avatar */}
-                <div className="relative">
-                  <div className="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-xl border-4 border-white">
-                    {profile.fullName.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div className="absolute bottom-2 right-2 w-6 h-6 bg-green-400 border-2 border-white rounded-full" />
-                </div>
-                
-                {/* User Info */}
-                <div className="pb-4">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                    {profile.fullName}
-                  </h1>
-                  <p className="text-lg text-gray-600 mb-3">{profile.headline}</p>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{profile.location}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <Badge className={getAvailabilityColor(profile.availability)}>
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      {profile.availability}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex space-x-3 pb-4">
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors flex items-center"
-                >
-                  {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit3 className="w-4 h-4 mr-2" />}
-                  {isEditing ? 'Save Profile' : 'Edit Profile'}
-                </button>
-              </div>
-            </div>
+        {/* Simple Header */}
+        <div className="text-center py-8 border-b border-slate-200">
+          <div className="w-28 h-28 bg-[#0F172A] rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4 shadow-sm">
+            {profile.fullName.split(' ').map(n => n[0]).join('')}
           </div>
-        </Card>
+          <h1 className="text-3xl font-light text-[#0F172A] mb-2">
+            {profile.fullName}
+          </h1>
+          <p className="text-[#475569] mb-3 text-lg">{profile.headline}</p>
+          <div className="flex items-center justify-center space-x-4 text-sm text-[#475569] mb-6">
+            <div className="flex items-center space-x-1">
+              <MapPin className="w-4 h-4" />
+              <span>{profile.location}</span>
+            </div>
+            <span className="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium">
+              {profile.availability}
+            </span>
+          </div>
+          <button
+            onClick={() => setIsEditing(!isEditing)}
+            className="px-6 py-2 bg-[#F97316] text-white rounded-lg hover:bg-[#ea580c] transition-colors shadow-sm"
+          >
+            {isEditing ? 'Save' : 'Edit'}
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             
-            {/* PROFILE COMPLETION SECTION */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Profile Strength</h2>
+            {/* Profile Strength Analytics Card */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-[#0F172A]">Profile Analytics</h2>
+                  <p className="text-sm text-[#475569]">Complete profile for better matches</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-600">{completionPercentage}%</div>
-                  <div className="text-sm text-gray-500">Complete</div>
+                  <div className="text-3xl font-bold text-[#14B8A6]">{completionPercentage}%</div>
+                  <div className="text-xs text-[#475569] uppercase tracking-wide">Score</div>
                 </div>
               </div>
               
-              <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">Profile Completion</span>
-                    <span className="text-sm font-bold text-blue-600">{completionPercentage}%</span>
-                  </div>
-                  <div className="flex items-end space-x-1 sm:space-x-2 h-20 sm:h-24">
-                    {[
-                      { label: 'Info', value: 100, color: 'bg-blue-600' },
-                      { label: 'Skills', value: 85, color: 'bg-purple-600' },
-                      { label: 'Projects', value: 90, color: 'bg-orange-600' },
-                      { label: 'Experience', value: 75, color: 'bg-green-600' },
-                      { label: 'Education', value: 95, color: 'bg-indigo-600' }
-                    ].map((item, index) => (
-                      <div key={index} className="flex-1 flex flex-col items-center justify-end min-w-0">
-                        <div 
-                          className={`w-full ${item.color} rounded-t-sm transition-all duration-500 relative flex items-center justify-center`}
-                          style={{ height: `${(item.value / 100) * 80}px` }}
-                        >
-                          <span className="text-white text-xs sm:text-sm font-bold absolute top-1">
-                            {item.value}%
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-600 mt-1 sm:mt-2 text-center truncate w-full">{item.label}</span>
+              {/* Progress Metrics */}
+              <div className="grid grid-cols-5 gap-2 mb-6">
+                {[
+                  { label: 'Basic', value: 100, color: 'bg-[#14B8A6]' },
+                  { label: 'Skills', value: 85, color: 'bg-[#0F172A]' },
+                  { label: 'Projects', value: 90, color: 'bg-[#F97316]' },
+                  { label: 'Experience', value: 75, color: 'bg-[#64748b]' },
+                  { label: 'Education', value: 95, color: 'bg-[#14B8A6]' }
+                ].map((metric, index) => (
+                  <div key={index} className="text-center">
+                    <div className="relative w-full h-20 bg-slate-100 rounded-lg mb-2 overflow-hidden">
+                      <div 
+                        className={`absolute bottom-0 w-full ${metric.color} transition-all duration-500`}
+                        style={{ height: `${metric.value}%` }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-xs font-bold text-white">{metric.value}%</span>
                       </div>
-                    ))}
+                    </div>
+                    <span className="text-xs text-[#475569]">{metric.label}</span>
                   </div>
+                ))}
+              </div>
+              
+              {/* Key Metrics */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-xl font-bold text-[#0F172A]">{profile.skills.length}</div>
+                  <div className="text-xs text-[#475569]">Skills</div>
                 </div>
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-xl font-bold text-[#0F172A]">{profile.projects.length}</div>
+                  <div className="text-xs text-[#475569]">Projects</div>
+                </div>
+                <div className="text-center p-3 bg-slate-50 rounded-lg">
+                  <div className="text-xl font-bold text-[#0F172A]">{profile.experience.length}</div>
+                  <div className="text-xs text-[#475569]">Experience</div>
+                </div>
+              </div>
+              
+              {/* Overall Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[#475569]">Overall Completion</span>
+                  <span className="font-medium text-[#0F172A]">{completionPercentage}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-[#14B8A6] to-[#0F172A] h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${completionPercentage}%` }}
+                  />
+                </div>
+              </div>
               
               {suggestions.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <p className="text-sm font-semibold text-blue-900 mb-2">Improve Your Profile:</p>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    {suggestions.map((suggestion, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="mr-2">â¢</span>
-                        {suggestion}
-                      </li>
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-[#0F172A]">Improvement Areas</span>
+                    <span className="text-xs text-[#475569]">{suggestions.length} items</span>
+                  </div>
+                  <div className="space-y-2">
+                    {suggestions.slice(0, 2).map((suggestion, index) => (
+                      <div key={index} className="flex items-center space-x-2 text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-[#F97316] rounded-full" />
+                        <span className="text-[#475569]">{suggestion}</span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
-            </Card>
+            </div>
 
-            {/* SKILLS SECTION - Structured Data */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <Award className="w-5 h-5 text-purple-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Skills</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Skill
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Simple Skills */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <h2 className="text-lg font-medium text-[#0F172A] mb-4">Skills</h2>
+              <div className="flex flex-wrap gap-2">
                 {profile.skills.map((skill, index) => (
-                  <div key={index} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-1">{skill.name}</h3>
-                        <div className="flex items-center space-x-2">
-                          <Badge 
-                            variant={skill.level === 'Expert' ? 'default' : skill.level === 'Advanced' ? 'secondary' : 'outline'} 
-                            className="text-xs"
-                          >
-                            {skill.level}
-                          </Badge>
-                          <span className="text-xs text-gray-500">• {skill.yearsOfExperience} years</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        {Array.from({ length: 4 }, (_, i) => (
-                          <div
-                            key={i}
-                            className={`w-2 h-2 rounded-full ${
-                              skill.level === 'Expert' ? 'bg-purple-600' :
-                              skill.level === 'Advanced' ? 'bg-blue-600' :
-                              skill.level === 'Intermediate' ? 'bg-green-600' :
-                              'bg-yellow-600'
-                            } ${i < (skill.level === 'Expert' ? 4 : skill.level === 'Advanced' ? 3 : skill.level === 'Intermediate' ? 2 : 1) ? '' : 'opacity-30'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <span key={index} className="px-4 py-2 bg-teal-50 text-teal-700 rounded-full text-sm font-medium border border-teal-100">
+                    {skill.name}
+                  </span>
                 ))}
               </div>
-            </Card>
+            </div>
 
-            {/* EXPERIENCE SECTION - Timeline UI */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <Briefcase className="w-5 h-5 text-green-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Experience</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Experience
-                </button>
-              </div>
-              
-              <div className="space-y-6">
-                {profile.experience.map((exp, index) => (
-                  <div key={index} className="border-l-4 border-blue-500 pl-6 relative">
-                    <div className="absolute -left-2 top-0 w-4 h-4 bg-blue-500 rounded-full" />
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">{exp.role}</h3>
-                        <p className="text-gray-600">{exp.company}</p>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500 mt-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{exp.startDate} - {exp.endDate}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-700 mb-3">{exp.description}</p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      {exp.technologies.map((tech, techIndex) => (
-                        <Badge key={techIndex} variant="outline" size="sm">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* PROJECTS SECTION - Critical for AI */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-2">
-                  <Star className="w-5 h-5 text-orange-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Projects</h2>
-                  <Badge variant="warning" className="text-xs">AI Critical</Badge>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Project
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {profile.projects.map((project, index) => (
-                  <Card key={index} hover className="p-6 border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">{project.name}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3 line-clamp-3">
-                      {project.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="outline" className="text-blue-600 text-xs sm:text-sm font-medium">
-                        {project.role}
-                      </Badge>
-                      <a 
-                        href={project.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium flex items-center"
-                      >
-                        View Project
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-1">
-                      {project.technologies.slice(0, 3).map((tech, techIndex) => (
-                        <Badge key={techIndex} variant="outline" className="text-xs">
-                          {tech}
-                        </Badge>
-                      ))}
-                      {project.technologies.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{project.technologies.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </Card>
-
-            {/* EDUCATION SECTION */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Education</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Education
-                </button>
-              </div>
-              
+            {/* Simple Experience */}
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <h2 className="text-lg font-medium text-[#0F172A] mb-4">Experience</h2>
               <div className="space-y-4">
-                {profile.education.map((edu, index) => (
-                  <div key={index} className="border-l-4 border-indigo-500 pl-4">
-                    <h3 className="font-medium text-gray-900">{edu.degree} in {edu.field}</h3>
-                    <p className="text-gray-600">{edu.institution}</p>
-                    <p className="text-sm text-gray-500">{edu.startDate} - {edu.endDate}</p>
+                {profile.experience.map((exp, index) => (
+                  <div key={index} className="border-l-3 border-teal-200 pl-4 py-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium text-[#0F172A]">{exp.role}</h3>
+                        <p className="text-[#475569] text-sm">{exp.company}</p>
+                        <p className="text-slate-400 text-sm mt-1">{exp.startDate} - {exp.endDate}</p>
+                      </div>
+                      <Briefcase className="w-5 h-5 text-slate-400" />
+                    </div>
                   </div>
                 ))}
               </div>
-            </Card>
+            </div>
 
-            {/* CERTIFICATIONS SECTION */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Award className="w-5 h-5 text-yellow-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Certifications</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Certification
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {profile.certifications.map((cert, index) => (
-                  <Card key={index} className="p-4 border border-gray-200">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Award className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{cert.name}</h3>
-                        <p className="text-gray-600">{cert.issuer}</p>
-                        <p className="text-sm text-gray-500">{cert.date}</p>
-                      </div>
+            {/* Simple Projects */}
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <h2 className="text-lg font-medium text-[#0F172A] mb-4">Projects</h2>
+              <div className="space-y-3">
+                {profile.projects.map((project, index) => (
+                  <div key={index} className="bg-slate-50 p-4 rounded-lg border border-slate-100 hover:border-slate-200 transition-colors">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-[#0F172A]">{project.name}</h3>
+                      <span className="text-xs text-teal-600 font-medium">{project.role}</span>
                     </div>
-                  </Card>
+                    <p className="text-sm text-[#475569] mb-3">{project.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {project.technologies.slice(0, 3).map((tech, techIndex) => (
+                        <span key={techIndex} className="px-2 py-1 bg-white text-xs text-slate-600 rounded border border-slate-200">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </Card>
+            </div>
 
-            {/* LANGUAGES SECTION */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Languages className="w-5 h-5 text-teal-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Languages</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Language
-                </button>
+            {/* Simple Education & Languages */}
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center space-x-2 mb-4">
+                <BookOpen className="w-5 h-5 text-slate-600" />
+                <h2 className="text-lg font-medium text-[#0F172A]">Education</h2>
+              </div>
+              <div className="space-y-3">
+                {profile.education.map((edu, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-[#14B8A6] rounded-full mt-2" />
+                    <div>
+                      <p className="font-medium text-[#0F172A]">{edu.degree} in {edu.field}</p>
+                      <p className="text-sm text-[#475569]">{edu.institution}</p>
+                      <p className="text-sm text-slate-400">{edu.startDate} - {edu.endDate}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
               
-              <div className="flex flex-wrap gap-3">
+              <div className="flex items-center space-x-2 mb-4 mt-6">
+                <Languages className="w-5 h-5 text-slate-600" />
+                <h2 className="text-lg font-medium text-[#0F172A]">Languages</h2>
+              </div>
+              <div className="flex flex-wrap gap-2">
                 {profile.languages.map((lang, index) => (
-                  <Badge 
-                    key={index}
-                    variant="outline"
-                    className="px-4 py-2 text-sm font-medium"
-                  >
-                    {lang.name} ({lang.proficiency})
-                  </Badge>
+                  <span key={index} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm">
+                    {lang.name}
+                  </span>
                 ))}
               </div>
-            </Card>
-
-            {/* SOCIAL LINKS SECTION */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Globe className="w-5 h-5 text-blue-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Social Links</h2>
-                </div>
-                <button className="text-blue-600 hover:text-blue-700 font-medium flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Link
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {profile.socialLinks.map((link, index) => (
-                  <a
-                    key={index}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-3 p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                  >
-                    {getSocialIcon(link.platform)}
-                    <span className="font-medium text-gray-700">{link.platform}</span>
-                  </a>
-                ))}
-              </div>
-            </Card>
+            </div>
           </div>
 
-          {/* AI OPTIMIZATION PANEL - Sidebar */}
+          {/* Simple AI Score */}
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <TrendingUp className="w-5 h-5 text-purple-600" />
-                <h3 className="text-lg font-semibold text-gray-900">AI Profile Score</h3>
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm sticky top-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <TrendingUp className="w-5 h-5 text-[#14B8A6]" />
+                <h3 className="text-lg font-medium text-[#0F172A]">AI Score</h3>
               </div>
-              
-              {/* Profile Image */}
-              <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <img 
-                    src="/api/placeholder/150/150" 
-                    alt="Profile" 
-                    className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
-                  />
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-400 border-2 border-white rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-white" />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Score Display */}
               <div className="text-center mb-6">
-                <div className="text-4xl font-bold text-purple-600 mb-2">{aiScore}</div>
-                <div className="text-sm text-gray-600">out of 100</div>
-                <ProgressBar value={aiScore} className="mt-4" />
+                <div className="text-4xl font-light text-[#14B8A6]">{aiScore}</div>
+                <div className="text-sm text-[#475569]">out of 100</div>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Strengths</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5" />
-                      Strong project portfolio
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5" />
-                      Relevant tech stack
-                    </li>
-                    <li className="flex items-start">
-                      <CheckCircle className="w-3 h-3 text-green-500 mr-2 mt-0.5" />
-                      Good experience timeline
-                    </li>
-                  </ul>
+              <div className="space-y-4 text-sm">
+                <div className="p-3 bg-teal-50 rounded-lg">
+                  <p className="font-medium text-teal-900 mb-1">Strengths</p>
+                  <p className="text-teal-700">Projects, tech stack, experience</p>
                 </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">To Improve</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li className="flex items-start">
-                      <X className="w-3 h-3 text-red-500 mr-2 mt-0.5" />
-                      Add measurable achievements
-                    </li>
-                    <li className="flex items-start">
-                      <X className="w-3 h-3 text-yellow-500 mr-2 mt-0.5" />
-                      More backend experience
-                    </li>
-                    <li className="flex items-start">
-                      <X className="w-3 h-3 text-yellow-500 mr-2 mt-0.5" />
-                      Additional certifications
-                    </li>
-                  </ul>
-                </div>
-
-                <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-                  <h4 className="font-medium text-purple-900 mb-2">AI Tips</h4>
-                  <p className="text-sm text-purple-800">
-                    Add specific metrics and achievements to your experience descriptions. 
-                    Quantifiable results significantly improve your AI match score.
-                  </p>
+                <div className="p-3 bg-orange-50 rounded-lg">
+                  <p className="font-medium text-orange-900 mb-1">To improve</p>
+                  <p className="text-orange-700">Add achievements, more certifications</p>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       </div>

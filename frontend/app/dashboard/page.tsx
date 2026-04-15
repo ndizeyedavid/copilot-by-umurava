@@ -45,25 +45,25 @@ export default function DashboardPage() {
       label: "Total Jobs",
       value: 54,
       icon: <Briefcase className="h-6 w-6 text-white/90" />,
-      className: "bg-[#2F6FED]",
+      className: "bg-primary",
     },
     {
       label: "Applications",
       value: 14,
       icon: <FileText className="h-6 w-6 text-white/90" />,
-      className: "bg-[#0B1324]",
+      className: "bg-secondary",
     },
     {
       label: "Rejected",
       value: 1,
       icon: <XCircle className="h-6 w-6 text-white/90" />,
-      className: "bg-[#ff3333]",
+      className: "bg-destructive",
     },
     {
       label: "Accepted",
       value: 6,
       icon: <CheckCircle2 className="h-6 w-6 text-white/90" />,
-      className: "bg-[#20C46A]",
+      className: "bg-emerald-500",
     },
   ];
 

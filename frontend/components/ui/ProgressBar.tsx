@@ -23,9 +23,9 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
     };
 
     const variants = {
-      default: "bg-gradient-to-r from-blue-500 to-blue-600",
-      success: "bg-gradient-to-r from-green-500 to-green-600",
-      warning: "bg-gradient-to-r from-yellow-500 to-yellow-600",
+      default: "bg-gradient-to-r from-primary to-secondary",
+      success: "bg-gradient-to-r from-emerald-500 to-emerald-600",
+      warning: "bg-gradient-to-r from-amber-500 to-amber-600",
       danger: "bg-gradient-to-r from-red-500 to-red-600",
     };
 
@@ -33,11 +33,11 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
       <div ref={ref} className={cn("w-full", className)} {...props}>
         {showLabel && (
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm font-medium text-gray-700">{Math.round(percentage)}%</span>
+            <span className="text-sm font-medium text-foreground">Progress</span>
+            <span className="text-sm font-medium text-foreground">{Math.round(percentage)}%</span>
           </div>
         )}
-        <div className={cn("w-full bg-gray-200 rounded-full overflow-hidden", sizes[size])}>
+        <div className={cn("w-full bg-border rounded-full overflow-hidden", sizes[size])}>
           <div
             className={cn(
               "h-full transition-all duration-500 ease-out rounded-full",

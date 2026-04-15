@@ -11,11 +11,11 @@ interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant = "default", size = "md", ...props }, ref) => {
     const variants = {
-      default: "bg-blue-100 text-blue-800 border-blue-200",
-      secondary: "bg-gray-100 text-gray-800 border-gray-200",
-      success: "bg-green-100 text-green-800 border-green-200",
-      warning: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      outline: "border border-gray-300 bg-white text-gray-700",
+      default: "bg-primary/10 text-primary border-primary/20",
+      secondary: "bg-secondary/10 text-secondary border-secondary/20",
+      success: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      warning: "bg-amber-50 text-amber-700 border-amber-200",
+      outline: "border border-border bg-card text-card-foreground",
     };
 
     const sizes = {
@@ -28,7 +28,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       <div
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+          "inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
           variants[variant],
           sizes[size],
           className
