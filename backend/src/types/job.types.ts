@@ -3,6 +3,7 @@ import { Document } from "mongoose";
 export type JobType = "full-time" | "part-time";
 export type LocationType = "on-site" | "hybrid" | "remote";
 export type Currency = "USD" | "RWF";
+export type JobStatus = "open" | "closed" | "draft";
 
 export interface IJob extends Document {
   title: string;
@@ -16,6 +17,7 @@ export interface IJob extends Document {
   deadline: Date;
   jobType: JobType;
   locationType: LocationType;
+  status: JobStatus;
   salary: {
     amount: number;
     currency: Currency;

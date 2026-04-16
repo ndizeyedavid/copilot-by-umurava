@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 import AdminJobsCards from "@/app/components/admin/jobs/AdminJobsCards";
 import AdminJobsTable, {
@@ -19,6 +20,7 @@ type BackendJob = {
   jobType?: string;
   locationType?: string;
   deadline?: string | Date;
+  status?: "open" | "closed" | "draft";
   createdAt?: string;
   updatedAt?: string;
 };
@@ -61,6 +63,16 @@ function deriveStatus(
   return dt.getTime() >= Date.now() ? "Open" : "Closed";
 }
 
+function mapStatus(
+  status: BackendJob["status"],
+  deadline: BackendJob["deadline"],
+): AdminJobRow["status"] {
+  if (status === "draft") return "Draft";
+  if (status === "closed") return "Closed";
+  if (status === "open") return "Open";
+  return deriveStatus(deadline);
+}
+
 function compare(a: AdminJobRow, b: AdminJobRow, key: SortKey) {
   const va = a[key];
   const vb = b[key];
@@ -71,6 +83,7 @@ function compare(a: AdminJobRow, b: AdminJobRow, key: SortKey) {
 
 export default function AdminJobsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const jobsQuery = useQuery({
     queryKey: ["admin", "jobs"],
@@ -116,7 +129,7 @@ export default function AdminJobsPage() {
           company: "—",
           location: mapLocation(job?.locationType),
           type: mapJobType(job?.jobType),
-          status: deriveStatus(deadline),
+          status: mapStatus(job?.status, deadline),
           postedAt: formatDate(job?.createdAt),
           deadline: formatDate(deadline),
           applicants: counts.get(id) ?? 0,
@@ -125,6 +138,43 @@ export default function AdminJobsPage() {
       })
       .filter((v): v is AdminJobRow => Boolean(v));
   }, [applicationsQuery.data, jobsQuery.data]);
+
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await api.delete(`/jobs/${jobId}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job deleted");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? "Failed to delete job");
+    },
+  });
+
+  const updateJobStatusMutation = useMutation({
+    mutationFn: async ({
+      jobId,
+      status,
+    }: {
+      jobId: string;
+      status: string;
+    }) => {
+      const res = await api.put(`/jobs/${jobId}`, { status });
+      return res.data;
+    },
+    onSuccess: async (_data, vars) => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin", "job", vars.jobId],
+      });
+      toast.success("Job updated");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? "Failed to update job");
+    },
+  });
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [query, setQuery] = useState("");
@@ -190,9 +240,30 @@ export default function AdminJobsPage() {
     action: "view" | "edit" | "close" | "open" | "delete",
     row: AdminJobRow,
   ) => {
-    console.log("job action", action, row);
-    if (action == "view") {
+    if (action === "view") {
       router.push("/admin/jobs/" + row.id);
+      return;
+    }
+
+    if (action === "edit") {
+      router.push(`/admin/jobs/${row.id}/edit`);
+      return;
+    }
+
+    if (action === "delete") {
+      const ok = window.confirm("Delete this job? This cannot be undone.");
+      if (!ok) return;
+      deleteJobMutation.mutate(row.id);
+      return;
+    }
+
+    if (action === "close") {
+      updateJobStatusMutation.mutate({ jobId: row.id, status: "closed" });
+      return;
+    }
+
+    if (action === "open") {
+      updateJobStatusMutation.mutate({ jobId: row.id, status: "open" });
     }
   };
 
