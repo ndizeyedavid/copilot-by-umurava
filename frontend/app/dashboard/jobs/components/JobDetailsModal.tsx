@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { Job } from "./JobCard";
 import { BsCash } from "react-icons/bs";
+import SafeHtml from "@/app/components/SafeHtml";
 
 interface JobDetailsModalProps {
   job: Job;
@@ -76,9 +77,10 @@ export default function JobDetailsModal({
                 <h3 className="text-xl font-black text-[#25324B] mb-4">
                   Description
                 </h3>
-                <p className="text-[#7C8493] leading-relaxed font-medium whitespace-pre-line">
-                  {job.description}
-                </p>
+                <SafeHtml
+                  html={job.description}
+                  className="text-[#7C8493] leading-relaxed font-medium"
+                />
               </section>
 
               <section>

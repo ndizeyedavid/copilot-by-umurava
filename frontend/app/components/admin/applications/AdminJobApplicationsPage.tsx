@@ -1,74 +1,104 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Search, Filter, Download } from "lucide-react";
+import { ArrowLeft, Search, Filter, Download, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import AdminApplicationsTable, {
   type AdminApplicationRow,
 } from "@/app/components/admin/applications/AdminApplicationsTable";
 import AdminApplicationDetailModal from "@/app/components/admin/applications/AdminApplicationDetailModal";
+import { api } from "@/lib/api/client";
+
+type BackendApplication = {
+  _id: string;
+  jobId: string;
+  talentId: string;
+  status: AdminApplicationRow["status"];
+  coverLetter?: string;
+  resumeUrl: string;
+  createdAt: string;
+};
+
+type BackendTalent = {
+  _id: string;
+  headline: string;
+  location: string;
+  userId: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    picture?: string;
+  };
+};
+
+type BackendJob = {
+  _id: string;
+  title: string;
+};
 
 export default function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
   const [query, setQuery] = useState("");
   const [selectedApplication, setSelectedApplication] =
     useState<AdminApplicationRow | null>(null);
+  const [selectedTalentIds, setSelectedTalentIds] = useState<string[]>([]);
+  const router = useRouter();
 
-  // Mock data for applications
-  const applications: AdminApplicationRow[] = [
-    {
-      id: "app_1",
-      talentName: "Justin Lipshutz",
-      talentHeadline: "Senior Product Designer",
-      talentLocation: "New York, USA",
-      status: "shortlisted",
-      appliedDate: "2026-04-12",
-      resumeUrl: "#",
-      coverLetter: "I am very interested in this position because...",
+  const jobQuery = useQuery({
+    queryKey: ["admin", "job", jobId],
+    queryFn: async () => {
+      const res = await api.get(`/jobs/${jobId}`);
+      return res.data?.job as BackendJob;
     },
-    {
-      id: "app_2",
-      talentName: "Marcus Culhane",
-      talentHeadline: "Frontend Engineer",
-      talentLocation: "London, UK",
-      status: "reviewing",
-      appliedDate: "2026-04-13",
-      resumeUrl: "#",
-      coverLetter: "I have been working with React for 5 years...",
-    },
-    {
-      id: "app_3",
-      talentName: "Leo Stanton",
-      talentHeadline: "Data Analyst",
-      talentLocation: "Berlin, Germany",
-      status: "rejected",
-      appliedDate: "2026-04-10",
-      resumeUrl: "#",
-    },
-    {
-      id: "app_4",
-      talentName: "Avery Davis",
-      talentHeadline: "Fullstack Developer",
-      talentLocation: "San Francisco, USA",
-      status: "hired",
-      appliedDate: "2026-04-05",
-      resumeUrl: "#",
-    },
-    {
-      id: "app_5",
-      talentName: "Sofia Rodriguez",
-      talentHeadline: "UX Researcher",
-      talentLocation: "Madrid, Spain",
-      status: "pending",
-      appliedDate: "2026-04-14",
-      resumeUrl: "#",
-    },
-  ];
+  });
 
-  const filteredApplications = applications.filter(
+  const applicationsQuery = useQuery({
+    queryKey: ["admin", "job", jobId, "applications"],
+    queryFn: async () => {
+      const res = await api.get(`/applications/job/${jobId}`);
+      const apps = res.data?.applications as BackendApplication[];
+
+      const candidates: AdminApplicationRow[] = await Promise.all(
+        apps.map(async (app) => {
+          const talentRes = await api.get(`/talents/${app.talentId}`);
+          const talent = talentRes.data?.fetchedTalent as BackendTalent;
+
+          return {
+            id: app._id,
+            talentId: app.talentId,
+            talentName: `${talent.userId.firstName} ${talent.userId.lastName}`,
+            talentAvatar: talent.userId.picture,
+            talentHeadline: talent.headline,
+            talentLocation: talent.location,
+            status: app.status,
+            appliedDate: new Date(app.createdAt).toISOString().split("T")[0],
+            resumeUrl: app.resumeUrl,
+            coverLetter: app.coverLetter,
+          };
+        }),
+      );
+
+      return candidates;
+    },
+  });
+
+  const isLoading = jobQuery.isLoading || applicationsQuery.isLoading;
+  const applications = applicationsQuery.data || [];
+
+  const filteredApplications = (applications || []).filter(
     (app) =>
       app.talentName.toLowerCase().includes(query.toLowerCase()) ||
       app.talentHeadline.toLowerCase().includes(query.toLowerCase()),
   );
+
+  const selectedCount = selectedTalentIds.length;
+  const canCompare = selectedCount === 2;
+  const selectedNames = selectedTalentIds
+    .map(
+      (id) => filteredApplications.find((a) => a.talentId === id)?.talentName,
+    )
+    .filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
@@ -84,7 +114,10 @@ export default function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
           </Link>
           <h1 className="text-2xl font-bold text-[#25324B]">Applications</h1>
           <p className="text-sm text-[#7C8493]">
-            Managing candidates for <span className="font-semibold text-[#25324B]">Senior Frontend Engineer</span>
+            Managing candidates for{" "}
+            <span className="font-semibold text-[#25324B]">
+              {jobQuery.data?.title || "..."}
+            </span>
           </p>
         </div>
         <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50 transition-colors">
@@ -106,6 +139,32 @@ export default function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
           />
         </div>
         <div className="flex items-center gap-3">
+          <button
+            disabled={!canCompare}
+            onClick={() => {
+              if (selectedTalentIds.length !== 2) return;
+              const [a, b] = selectedTalentIds;
+              router.push(
+                `/admin/jobs/${jobId}/applications/compare?a=${encodeURIComponent(
+                  a,
+                )}&b=${encodeURIComponent(b)}`,
+              );
+            }}
+            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${
+              canCompare
+                ? "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
+                : "border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed"
+            }`}
+            title={
+              canCompare
+                ? `Compare ${selectedNames[0] ?? ""} vs ${
+                    selectedNames[1] ?? ""
+                  }`
+                : "Select exactly 2 applicants to compare"
+            }
+          >
+            Vs
+          </button>
           <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50 transition-colors">
             <Filter className="h-4 w-4 text-gray-400" />
             Filters
@@ -118,10 +177,26 @@ export default function AdminJobApplicationsPage({ jobId }: { jobId: string }) {
       </div>
 
       {/* Table */}
-      <AdminApplicationsTable
-        rows={filteredApplications}
-        onViewDetails={(app) => setSelectedApplication(app)}
-      />
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-20 rounded-xl border border-gray-200 bg-white shadow-sm">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
+          <p className="text-sm text-[#7C8493]">Loading applications...</p>
+        </div>
+      ) : (
+        <AdminApplicationsTable
+          rows={filteredApplications}
+          onViewDetails={(app) => setSelectedApplication(app)}
+          selectedTalentIds={selectedTalentIds}
+          onToggleSelect={(talentId) => {
+            setSelectedTalentIds((prev) => {
+              if (prev.includes(talentId))
+                return prev.filter((x) => x !== talentId);
+              if (prev.length >= 2) return prev;
+              return [...prev, talentId];
+            });
+          }}
+        />
+      )}
 
       {/* Detail Modal */}
       <AdminApplicationDetailModal

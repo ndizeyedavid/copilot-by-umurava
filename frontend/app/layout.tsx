@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { cn } from "@/lib/utils";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleOneTap from "./components/GoogleOneTap";
+import Providers from "./providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -49,10 +50,12 @@ export default function RootLayout({
           enableSystem={false}
         >
           <GoogleOAuthProvider
-            clientId={process.env.GOOGLE_CLIENT_ID as string}
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string}
           >
-            {/* <GoogleOneTap /> */}
-            {children}
+            <Providers>
+              {/* <GoogleOneTap /> */}
+              {children}
+            </Providers>
           </GoogleOAuthProvider>
         </ThemeProvider>
       </body>

@@ -1,10 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 
 import RichTextEditor from "@/app/components/admin/form/RichTextEditor";
+import { api } from "@/lib/api/client";
 
 type FormValues = {
   title: string;
@@ -26,6 +30,9 @@ type FormValues = {
 };
 
 export default function AdminJobCreateForm() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const {
     register,
     handleSubmit,
@@ -67,6 +74,30 @@ export default function AdminJobCreateForm() {
   }, [weights]);
 
   const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+
+  const createJobMutation = useMutation<
+    any,
+    unknown,
+    { payload: any; redirect?: boolean }
+  >({
+    mutationFn: async ({ payload }) => {
+      const res = await api.post("/jobs", payload);
+      return res.data;
+    },
+    onSuccess: async (data, vars) => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job created");
+      const jobId = String(data?.job?._id ?? data?.job?.id ?? "").trim();
+      if (vars.redirect !== false && jobId) {
+        router.push(`/admin/jobs/${jobId}`);
+      } else {
+        router.push("/admin/jobs");
+      }
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? "Failed to create job");
+    },
+  });
 
   const rebalanceWeights = (
     key: "skills" | "experience" | "education",
@@ -115,7 +146,7 @@ export default function AdminJobCreateForm() {
     setValue("weights.education", clamp(next.education), { shouldDirty: true });
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const buildPayload = (values: FormValues, status?: "draft" | "open") => {
     const payload = {
       title: values.title.trim(),
       description: values.description,
@@ -130,6 +161,7 @@ export default function AdminJobCreateForm() {
       deadline: new Date(values.deadline).toISOString(),
       jobType: values.jobType,
       locationType: values.locationType,
+      status: status ?? "open",
       salary: {
         amount: Number(values.salary.amount),
         currency: values.salary.currency,
@@ -137,7 +169,12 @@ export default function AdminJobCreateForm() {
       benefits: values.benefits.map((b) => b.value.trim()).filter(Boolean),
     };
 
-    console.log("create job payload", payload);
+    return payload;
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    const payload = buildPayload(values, "open");
+    await createJobMutation.mutateAsync({ payload });
   };
 
   const fieldClass =
@@ -466,16 +503,23 @@ export default function AdminJobCreateForm() {
           <div className="flex gap-2">
             <button
               type="button"
-              className="rounded-xl border border-gray-200 bg-white px-5 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
+              disabled={isSubmitting || createJobMutation.isPending}
+              onClick={handleSubmit(async (values) => {
+                const payload = buildPayload(values, "draft");
+                await createJobMutation.mutateAsync({ payload });
+              })}
+              className="rounded-xl border border-gray-200 bg-white px-5 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50 disabled:opacity-50"
             >
               Save as draft
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || createJobMutation.isPending}
               className="rounded-xl bg-[#286ef0] px-5 py-2 text-sm font-semibold text-white hover:bg-[#1f5fe0] disabled:opacity-50"
             >
-              {isSubmitting ? "Creating..." : "Create job"}
+              {isSubmitting || createJobMutation.isPending
+                ? "Creating..."
+                : "Create job"}
             </button>
           </div>
         </div>

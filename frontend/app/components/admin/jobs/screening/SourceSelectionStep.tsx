@@ -6,7 +6,7 @@ export default function SourceSelectionStep({
   onSelect,
   onBack,
 }: {
-  onSelect: (source: "internal" | "upload") => void;
+  onSelect: (source: "internal" | "upload", file?: File) => void;
   onBack: () => void;
 }) {
   return (
@@ -43,7 +43,10 @@ export default function SourceSelectionStep({
           <input
             type="file"
             className="absolute inset-0 cursor-pointer opacity-0"
-            onChange={() => onSelect("upload")}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              onSelect("upload", file);
+            }}
           />
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 transition-transform group-hover:scale-110">
             <FileUp className="h-10 w-10" />

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import ScreeningStepper from "./screening/ScreeningStepper";
 import ScreeningHistoryStep, {
   SavedScreening,
@@ -9,6 +10,7 @@ import ScreeningHistoryStep, {
 import JobSelectionStep, { JobSummary } from "./screening/JobSelectionStep";
 import SourceSelectionStep from "./screening/SourceSelectionStep";
 import ProcessingStep from "./screening/ProcessingStep";
+import { api } from "@/lib/api/client";
 
 type ScreeningStep = "history" | "select_job" | "select_source" | "processing";
 
@@ -30,6 +32,29 @@ const LOADING_MESSAGES = [
   "Finalizing recommendations...",
 ];
 
+type BackendScreening = {
+  _id: string;
+  jobId: string;
+  candidates: {
+    candidateId: string;
+    rank: number;
+    matchScore: number;
+    confidence: "high" | "medium" | "low";
+  }[];
+  createdAt: string;
+};
+
+type BackendJob = {
+  _id: string;
+  title: string;
+  createdAt: string;
+};
+
+type BackendApplication = {
+  _id: string;
+  jobId: string;
+};
+
 export default function AdminJobScreeningPage({
   jobId: initialJobId,
 }: {
@@ -44,68 +69,127 @@ export default function AdminJobScreeningPage({
   );
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
 
-  // Mock History
-  const screeningHistory: SavedScreening[] = [
-    {
-      id: "scr_1",
-      jobTitle: "Senior Frontend Engineer",
-      date: "Apr 12, 2026",
-      candidateCount: 48,
-      topScore: 94,
-      confidence: "high",
+  const screeningsQuery = useQuery({
+    queryKey: ["admin", "screenings", initialJobId ?? "all"],
+    queryFn: async () => {
+      const url = initialJobId
+        ? `/screening/job/${initialJobId}`
+        : "/screening";
+      const res = await api.get(url);
+      const list = (res.data?.fetchedScreenings ??
+        res.data?.fetchedScreening ??
+        []) as BackendScreening[];
+      return Array.isArray(list) ? list : [];
     },
-    {
-      id: "scr_2",
-      jobTitle: "Product Designer",
-      date: "Apr 10, 2026",
-      candidateCount: 31,
-      topScore: 88,
-      confidence: "high",
-    },
-  ];
+  });
 
-  // Mock jobs list
-  const jobs: JobSummary[] = [
-    {
-      id: "job_1",
-      title: "Senior Frontend Engineer",
-      company: "Umurava",
-      applicants: 48,
+  const jobsQuery = useQuery({
+    queryKey: ["admin", "jobs"],
+    queryFn: async () => {
+      const res = await api.get("/jobs");
+      return (res.data?.jobs ?? []) as BackendJob[];
     },
-    {
-      id: "job_2",
-      title: "Product Designer",
-      company: "Copilot Team",
-      applicants: 31,
+  });
+
+  const applicationsQuery = useQuery({
+    queryKey: ["admin", "applications"],
+    queryFn: async () => {
+      const res = await api.get("/applications");
+      return (res.data?.applications ?? []) as BackendApplication[];
     },
-    {
-      id: "job_3",
-      title: "Backend Developer",
-      company: "TechCorp Solutions",
-      applicants: 64,
+  });
+
+  const runInternalMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await api.post(`/screening/ai/${jobId}`);
+      return res.data?.screening as BackendScreening;
     },
-  ];
+    onSuccess: (screening) => {
+      if (!screening?._id) return;
+      router.push(`/admin/screening/${screening._id}`);
+    },
+  });
+
+  const startExternalMutation = useMutation({
+    mutationFn: async ({ jobId, file }: { jobId: string; file: File }) => {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("jobId", jobId);
+      const res = await api.post("/external-screening/upload", form, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      return {
+        screeningId: String(res.data?.screeningId ?? ""),
+      };
+    },
+    onSuccess: ({ screeningId }) => {
+      if (!screeningId) return;
+      router.push(`/admin/screening/${screeningId}`);
+    },
+  });
+
+  const isProcessing =
+    runInternalMutation.isPending || startExternalMutation.isPending;
+
+  const jobs = useMemo((): JobSummary[] => {
+    const rawJobs = jobsQuery.data || [];
+    const rawApps = applicationsQuery.data || [];
+
+    const counts = new Map<string, number>();
+    for (const app of rawApps) {
+      counts.set(app.jobId, (counts.get(app.jobId) ?? 0) + 1);
+    }
+
+    return rawJobs.map((j) => ({
+      id: j._id,
+      title: j.title,
+      company: "—",
+      applicants: counts.get(j._id) ?? 0,
+    }));
+  }, [jobsQuery.data, applicationsQuery.data]);
+
+  const screeningHistory = useMemo((): SavedScreening[] => {
+    const list = screeningsQuery.data || [];
+    return list.map((s) => {
+      const top =
+        Array.isArray(s.candidates) && s.candidates.length
+          ? Math.max(...s.candidates.map((c) => c.matchScore))
+          : 0;
+      const topCandidate =
+        Array.isArray(s.candidates) && s.candidates.length
+          ? s.candidates.reduce(
+              (best, c) => (c.matchScore > best.matchScore ? c : best),
+              s.candidates[0],
+            )
+          : null;
+      return {
+        id: s._id,
+        jobId: s.jobId,
+        jobTitle: jobs.find((j) => j.id === s.jobId)?.title || "—",
+        date: new Date(s.createdAt).toLocaleDateString(),
+        candidateCount: Array.isArray(s.candidates) ? s.candidates.length : 0,
+        topScore: top,
+        confidence: (topCandidate?.confidence ??
+          "medium") as SavedScreening["confidence"],
+      };
+    });
+  }, [screeningsQuery.data, jobs]);
 
   useEffect(() => {
-    if (step === "processing") {
+    if (step === "processing" && isProcessing) {
       const interval = setInterval(() => {
         setLoadingMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
       }, 2500);
 
-      const timer = setTimeout(() => {
-        // Redirect to results page instead of staying on same page
-        const mockScreeningId =
-          "scr_" + Math.random().toString(36).substr(2, 9);
-        router.push(`/admin/screening/${mockScreeningId}`);
-        clearInterval(interval);
-      }, 10000);
-
-      return () => {
-        clearInterval(interval);
-        clearTimeout(timer);
-      };
+      return () => clearInterval(interval);
     }
-  }, [step, router]);
+  }, [step, isProcessing]);
+
+  useEffect(() => {
+    if (step === "processing" && !isProcessing) {
+      setStep(initialJobId ? "select_source" : "history");
+    }
+  }, [step, isProcessing, initialJobId]);
 
   return (
     <div className="space-y-6">
@@ -131,7 +215,13 @@ export default function AdminJobScreeningPage({
         <ScreeningHistoryStep
           screenings={screeningHistory}
           onView={(id) => router.push(`/admin/screening/${id}`)}
-          onReRun={(id) => setStep("processing")}
+          onReRun={(id) => {
+            const screening = screeningHistory.find((s) => s.id === id);
+            if (!screening?.jobId) return;
+            setSelectedJobId(screening.jobId);
+            setStep("processing");
+            runInternalMutation.mutate(screening.jobId);
+          }}
           onStartNew={() => setStep("select_job")}
         />
       )}
@@ -149,7 +239,19 @@ export default function AdminJobScreeningPage({
 
       {step === "select_source" && (
         <SourceSelectionStep
-          onSelect={() => setStep("processing")}
+          onSelect={(source, file) => {
+            if (!selectedJobId) return;
+            setStep("processing");
+            if (source === "internal") {
+              runInternalMutation.mutate(selectedJobId);
+              return;
+            }
+            if (!file) {
+              setStep("select_source");
+              return;
+            }
+            startExternalMutation.mutate({ jobId: selectedJobId, file });
+          }}
           onBack={() => setStep("select_job")}
         />
       )}

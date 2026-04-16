@@ -38,13 +38,30 @@ const jobsController = {
 
   async createJob(req: Request, res: Response) {
     try {
-      const { title, description, requirements, weights }: IJob = req.body;
+      const {
+        title,
+        description,
+        requirements,
+        weights,
+        deadline,
+        jobType,
+        locationType,
+        salary,
+        benefits,
+        status,
+      }: Partial<IJob> = req.body;
 
       const newJob = await Jobs.create({
         title,
         description,
         requirements,
         weights,
+        deadline,
+        jobType,
+        locationType,
+        salary,
+        benefits,
+        status,
       });
 
       return res
@@ -61,9 +78,12 @@ const jobsController = {
   async updateJob(req: Request, res: Response) {
     try {
       const { jobId } = req.params;
-      const payload: IJob = req.body;
+      const payload: Partial<IJob> = req.body;
 
-      const updatedJob = await Jobs.findByIdAndUpdate(jobId, payload);
+      const updatedJob = await Jobs.findByIdAndUpdate(jobId, payload, {
+        new: true,
+        runValidators: true,
+      });
       if (!updatedJob) return res.status(404).json({ message: "No job found" });
 
       return res

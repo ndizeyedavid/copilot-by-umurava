@@ -18,6 +18,12 @@ const jobsSchema = new Schema<IJob>(
       enum: ["on-site", "hybrid", "remote"],
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["open", "closed", "draft"],
+      default: "open",
+      required: true,
+    },
     salary: {
       amount: { type: Number, required: true },
       currency: { type: String, enum: ["USD", "RWF"], required: true },

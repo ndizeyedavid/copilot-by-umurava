@@ -19,10 +19,12 @@ import {
   FileText,
   Mail,
   MoreHorizontal,
+  Users,
 } from "lucide-react";
 
 export type AdminApplicationRow = {
   id: string;
+  talentId: string;
   talentName: string;
   talentAvatar?: string;
   talentHeadline: string;
@@ -36,15 +38,36 @@ export type AdminApplicationRow = {
 export default function AdminApplicationsTable({
   rows,
   onViewDetails,
+  selectedTalentIds,
+  onToggleSelect,
 }: {
   rows: AdminApplicationRow[];
   onViewDetails: (row: AdminApplicationRow) => void;
+  selectedTalentIds: string[];
+  onToggleSelect: (talentId: string) => void;
 }) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: "appliedDate", desc: true },
   ]);
 
   const columns: ColumnDef<AdminApplicationRow>[] = [
+    {
+      id: "select",
+      header: "",
+      enableSorting: false,
+      cell: ({ row }) => {
+        const talentId = row.original.talentId;
+        const checked = selectedTalentIds.includes(talentId);
+        return (
+          <input
+            type="checkbox"
+            checked={checked}
+            onChange={() => onToggleSelect(talentId)}
+            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          />
+        );
+      },
+    },
     {
       header: "Candidate",
       accessorKey: "talentName",
@@ -154,11 +177,16 @@ export default function AdminApplicationsTable({
                     <th key={header.id} className="px-6 py-4 text-left">
                       <div
                         className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#7C8493] ${
-                          header.column.getCanSort() ? "cursor-pointer select-none" : ""
+                          header.column.getCanSort()
+                            ? "cursor-pointer select-none"
+                            : ""
                         } ${header.id === "actions" ? "justify-end" : ""}`}
                         onClick={header.column.getToggleSortingHandler()}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                         {sorted === "asc" && <ArrowUp className="h-3 w-3" />}
                         {sorted === "desc" && <ArrowDown className="h-3 w-3" />}
                       </div>
@@ -170,7 +198,10 @@ export default function AdminApplicationsTable({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-[#F8F8FD]/50 transition-colors">
+              <tr
+                key={row.id}
+                className="hover:bg-[#F8F8FD]/50 transition-colors"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-6 py-4 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -183,8 +214,12 @@ export default function AdminApplicationsTable({
                 <td colSpan={columns.length} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center">
                     <Users className="h-10 w-10 text-gray-200 mb-2" />
-                    <p className="text-sm font-semibold text-[#25324B]">No applications yet</p>
-                    <p className="text-xs text-[#7C8493] mt-1">When candidates apply, they will appear here.</p>
+                    <p className="text-sm font-semibold text-[#25324B]">
+                      No applications yet
+                    </p>
+                    <p className="text-xs text-[#7C8493] mt-1">
+                      When candidates apply, they will appear here.
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -194,7 +229,12 @@ export default function AdminApplicationsTable({
       </div>
       <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-100">
         <p className="text-sm text-[#7C8493]">
-          Showing <span className="font-semibold text-[#25324B]">{table.getRowModel().rows.length}</span> of <span className="font-semibold text-[#25324B]">{rows.length}</span> candidates
+          Showing{" "}
+          <span className="font-semibold text-[#25324B]">
+            {table.getRowModel().rows.length}
+          </span>{" "}
+          of <span className="font-semibold text-[#25324B]">{rows.length}</span>{" "}
+          candidates
         </p>
         <div className="flex gap-2">
           <button
