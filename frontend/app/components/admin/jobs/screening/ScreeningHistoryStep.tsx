@@ -1,9 +1,18 @@
 "use client";
 
-import { BrainCircuit, Play, Eye, Calendar, Users, Target, Plus } from "lucide-react";
+import {
+  BrainCircuit,
+  Play,
+  Eye,
+  Calendar,
+  Users,
+  Target,
+  Plus,
+} from "lucide-react";
 
 export type SavedScreening = {
   id: string;
+  jobId: string;
   jobTitle: string;
   date: string;
   candidateCount: number;
@@ -40,7 +49,9 @@ export default function ScreeningHistoryStep({
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50 text-gray-400">
             <BrainCircuit className="h-8 w-8" />
           </div>
-          <h3 className="text-lg font-bold text-[#25324B]">No screenings yet</h3>
+          <h3 className="text-lg font-bold text-[#25324B]">
+            No screenings yet
+          </h3>
           <p className="mt-1 max-w-xs text-sm text-[#7C8493]">
             Start your first AI-powered candidate screening to see results here.
           </p>
