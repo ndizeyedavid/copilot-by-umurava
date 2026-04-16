@@ -1,20 +1,84 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import AdminKpiCards from "@/app/components/admin/dashboard/AdminKpiCards";
-import AdminJobsPreview from "@/app/components/admin/dashboard/AdminJobsPreview";
+import AdminJobsCards from "@/app/components/admin/jobs/AdminJobsCards";
 import AdminRecentApplicationsTable from "@/app/components/admin/dashboard/AdminRecentApplicationsTable";
 import AdminCandidateCompositionChart from "@/app/components/admin/charts/AdminCandidateCompositionChart";
 import AdminJobStatisticsChart from "@/app/components/admin/charts/AdminJobStatisticsChart";
 import { api } from "@/lib/api/client";
+import type { AdminJobRow } from "@/app/components/admin/jobs/AdminJobsTable";
+
+type BackendJob = {
+  _id?: string;
+  id?: string;
+  title?: string;
+  jobType?: string;
+  locationType?: string;
+  deadline?: string | Date;
+  status?: "open" | "closed" | "draft";
+  createdAt?: string;
+};
+
+type BackendApplication = {
+  _id?: string;
+  jobId?: string;
+  talentId?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+function formatDate(value: string | Date | undefined) {
+  if (!value) return "—";
+  const dt = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(dt.getTime())) return "—";
+  return dt.toISOString().slice(0, 10);
+}
+
+function mapJobType(jobType: string | undefined): AdminJobRow["type"] {
+  if (jobType === "part-time") return "Part-time";
+  if (jobType === "full-time") return "Full-time";
+  return "Full-time";
+}
+
+function mapLocation(locationType: string | undefined) {
+  if (locationType === "remote") return "Remote";
+  if (locationType === "hybrid") return "Hybrid";
+  if (locationType === "on-site") return "On-site";
+  return "—";
+}
+
+function deriveStatus(
+  deadline: string | Date | undefined,
+): AdminJobRow["status"] {
+  if (!deadline) return "Open";
+  const dt = typeof deadline === "string" ? new Date(deadline) : deadline;
+  if (Number.isNaN(dt.getTime())) return "Open";
+  return dt.getTime() >= Date.now() ? "Open" : "Closed";
+}
+
+function mapStatus(
+  status: BackendJob["status"],
+  deadline: BackendJob["deadline"],
+): AdminJobRow["status"] {
+  if (status === "draft") return "Draft";
+  if (status === "closed") return "Closed";
+  if (status === "open") return "Open";
+  return deriveStatus(deadline);
+}
 
 export default function AdminDashboard() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const jobsQuery = useQuery({
     queryKey: ["admin", "jobs"],
     queryFn: async () => {
       const res = await api.get("/jobs");
-      return (res.data?.jobs ?? []) as any[];
+      return (res.data?.jobs ?? []) as BackendJob[];
     },
     staleTime: 60_000,
   });
@@ -32,7 +96,7 @@ export default function AdminDashboard() {
     queryKey: ["admin", "applications"],
     queryFn: async () => {
       const res = await api.get("/applications");
-      return (res.data?.applications ?? []) as any[];
+      return (res.data?.applications ?? []) as BackendApplication[];
     },
     staleTime: 30_000,
   });
@@ -53,11 +117,12 @@ export default function AdminDashboard() {
     return { totalJobs, openJobs, closedJobs, candidates };
   }, [jobs, talents, now]);
 
-  const jobsPreview = useMemo(() => {
+  const jobRows = useMemo((): AdminJobRow[] => {
     const counts = new Map<string, number>();
     for (const app of applications) {
-      const key = String(app.jobId);
-      counts.set(key, (counts.get(key) || 0) + 1);
+      const key = String(app.jobId ?? "");
+      if (!key) continue;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
     }
 
     return jobs
@@ -67,23 +132,61 @@ export default function AdminDashboard() {
           new Date(b.createdAt || 0).getTime() -
           new Date(a.createdAt || 0).getTime(),
       )
-      .slice(0, 6)
-      .map((j) => {
-        const deadlineTs = new Date(j.deadline).getTime();
-        const status =
-          deadlineTs > now ? ("Open" as const) : ("Closed" as const);
+      .map((j): AdminJobRow | null => {
+        const id = String(j?._id ?? j?.id ?? "").trim();
+        if (!id) return null;
+
         return {
-          id: String(j._id),
-          title: String(j.title ?? ""),
+          id,
+          title: String(j?.title ?? "Untitled job"),
           company: "—",
-          location: String(j.locationType ?? ""),
-          type: String(j.jobType ?? "") as any,
-          status,
-          postedAtLabel: "",
-          applicants: counts.get(String(j._id)) || 0,
+          location: mapLocation(j?.locationType),
+          type: mapJobType(j?.jobType),
+          status: mapStatus(j?.status, j?.deadline),
+          postedAt: formatDate(j?.createdAt),
+          deadline: formatDate(j?.deadline),
+          applicants: counts.get(id) ?? 0,
+          views: 0,
         };
-      });
+      })
+      .filter((v): v is AdminJobRow => Boolean(v));
   }, [applications, jobs, now]);
+
+  const updateJobStatusMutation = useMutation({
+    mutationFn: async ({
+      jobId,
+      status,
+    }: {
+      jobId: string;
+      status: string;
+    }) => {
+      const res = await api.patch(`/jobs/${jobId}/status`, { status });
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job updated");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? "Failed to update job");
+    },
+  });
+
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await api.delete(`/jobs/${jobId}`);
+      return res.data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
+      toast.success("Job deleted");
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? "Failed to delete job");
+    },
+  });
+
+  const recentJobCards = useMemo(() => jobRows.slice(0, 6), [jobRows]);
 
   const recentApplicationsRows = useMemo(() => {
     const jobsById = new Map<string, any>(jobs.map((j) => [String(j._id), j]));
@@ -215,7 +318,59 @@ export default function AdminDashboard() {
 
       <AdminJobStatisticsChart data={jobStats} rangeLabel="This Month" />
 
-      <AdminJobsPreview jobs={jobsPreview.slice(0, 6)} />
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold text-[#25324B]">Recent Jobs</p>
+            <p className="text-sm text-[#7C8493]">
+              Quick snapshot of active roles
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/jobs")}
+            className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
+          >
+            View All
+          </button>
+        </div>
+
+        <AdminJobsCards
+          rows={recentJobCards}
+          onAction={(action, row) => {
+            if (action === "view") {
+              router.push("/admin/jobs/" + row.id);
+              return;
+            }
+
+            if (action === "edit") {
+              router.push(`/admin/jobs/${row.id}/edit`);
+              return;
+            }
+
+            if (action === "delete") {
+              const ok = window.confirm(
+                "Delete this job? This cannot be undone.",
+              );
+              if (!ok) return;
+              deleteJobMutation.mutate(row.id);
+              return;
+            }
+
+            if (action === "close") {
+              updateJobStatusMutation.mutate({
+                jobId: row.id,
+                status: "closed",
+              });
+              return;
+            }
+
+            if (action === "open") {
+              updateJobStatusMutation.mutate({ jobId: row.id, status: "open" });
+            }
+          }}
+        />
+      </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
