@@ -108,12 +108,12 @@ export default function ApplicationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FD] p-6 sm:p-10">
-      <div className="max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen bg-[#F8F9FD] p-2">
+      <div className="mx-auto space-y-6">
         {/* Header & Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-black text-[#25324B] tracking-tight">
+            <h1 className="text-3xl font-black text-[#25324B] tracking-tight">
               My Applications
             </h1>
             <p className="text-lg font-semibold text-[#7C8493] mt-2">
@@ -121,12 +121,12 @@ export default function ApplicationsPage() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-gray-50">
+            <div className="flex bg-white p-1.5 rounded-[10px] shadow-sm border border-gray-50">
               {(["All", "Active", "Past"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  className={`px-5 py-1.5 rounded-[10px] text-sm font-bold transition-all ${
                     activeTab === tab
                       ? "bg-[#286ef0] text-white shadow-md shadow-blue-100"
                       : "text-[#7C8493] hover:text-[#286ef0] hover:bg-blue-50/50"
@@ -140,9 +140,9 @@ export default function ApplicationsPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="p-6 bg-white border border-gray-100 rounded-[24px] shadow-sm flex items-center gap-5">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#286ef0]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="p-6 bg-white border border-gray-100 rounded-[10px] shadow-none flex items-center gap-5">
+            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-[#286ef0]">
               <LayoutList className="w-6 h-6" />
             </div>
             <div>
@@ -154,8 +154,8 @@ export default function ApplicationsPage() {
               </p>
             </div>
           </Card>
-          <Card className="p-6 bg-white border border-gray-100 rounded-[24px] shadow-sm flex items-center gap-5">
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500">
+          <Card className="p-6 bg-white border border-gray-100 rounded-[10px] shadow-none flex items-center gap-5">
+            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-500">
               <Clock className="w-6 h-6" />
             </div>
             <div>
@@ -167,8 +167,8 @@ export default function ApplicationsPage() {
               </p>
             </div>
           </Card>
-          <Card className="p-6 bg-white border border-gray-100 rounded-[24px] shadow-sm flex items-center gap-5">
-            <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-500">
+          <Card className="p-6 bg-white border border-gray-100 rounded-[10px] shadow-none flex items-center gap-5">
+            <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-500">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
@@ -180,8 +180,8 @@ export default function ApplicationsPage() {
               </p>
             </div>
           </Card>
-          <Card className="p-6 bg-white border border-gray-100 rounded-[24px] shadow-sm flex items-center gap-5">
-            <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500">
+          <Card className="p-6 bg-white border border-gray-100 rounded-[10px] shadow-none flex items-center gap-5">
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-500">
               <XCircle className="w-6 h-6" />
             </div>
             <div>
@@ -197,13 +197,13 @@ export default function ApplicationsPage() {
 
         {/* Search & Search Content */}
         <div className="space-y-6">
-          <Card className="p-4 bg-white border border-gray-100 rounded-[24px] shadow-sm">
+          <Card className="p-3 bg-white border border-gray-100 rounded-[10px] shadow-none">
             <div className="relative group">
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#286ef0] transition-colors" />
               <input
                 type="text"
                 placeholder="Filter by job title or company..."
-                className="w-full pl-14 pr-6 py-4 bg-[#F8F9FD] rounded-2xl border-none focus:ring-2 focus:ring-[#286ef0] font-semibold text-[#25324B] transition-all"
+                className="w-full pl-14 pr-6 py-2 bg-[#F8F9FD] outline rounded-2xl border-none focus:ring-2 focus:ring-[#286ef0] font-semibold text-[#25324B] transition-all"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -220,7 +220,7 @@ export default function ApplicationsPage() {
                 />
               ))
             ) : (
-              <div className="py-20 text-center bg-white rounded-[32px] border border-dashed border-gray-200">
+              <div className="py-20 text-center bg-white rounded-[10px] border border-dashed border-gray-200">
                 <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <History className="w-10 h-10 text-gray-300" />
                 </div>

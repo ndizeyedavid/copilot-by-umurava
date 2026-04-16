@@ -74,23 +74,12 @@ export default function ApplicationDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="bg-white w-full max-w-3xl max-h-[90vh] rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
+        className="bg-white w-full max-w-3xl max-h-[90vh] rounded-[10px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-8 border-b border-gray-100 flex items-start justify-between bg-linear-to-r from-white to-blue-50/30">
+        <div className="px-8 py-5 border-b border-gray-100 flex items-start justify-between bg-linear-to-r from-white to-blue-50/30">
           <div className="flex gap-6">
-            <div className="w-20 h-20 rounded-3xl bg-white shadow-md border border-gray-50 flex items-center justify-center overflow-hidden shrink-0">
-              {application.companyLogo ? (
-                <img
-                  src={application.companyLogo}
-                  alt={application.company}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Building2 className="w-10 h-10 text-[#286ef0]" />
-              )}
-            </div>
             <div>
               <h2 className="text-2xl font-black text-[#25324B] mb-2">
                 {application.jobTitle}
@@ -108,22 +97,22 @@ export default function ApplicationDetailModal({
           </div>
           <button
             onClick={onClose}
-            className="p-3 hover:bg-white hover:shadow-md rounded-2xl transition-all"
+            className="p-3 hover:bg-white hover:shadow-md rounded-full cursor-pointer transition-all"
           >
             <X className="w-6 h-6 text-gray-400" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+        <div className="flex-1 overflow-y-auto p-5 space-y-8">
           {/* Status Section */}
-          <section className="bg-gray-50 rounded-[24px] p-6 border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
+          <section className="">
+            <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-[#25324B] uppercase tracking-widest">
                 Application Status
               </h3>
               <Badge
-                className={`${config.color} border-none px-4 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2`}
+                className={`${config.color} border-none px-2 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2`}
               >
                 {config.icon}
                 {config.label}
@@ -133,8 +122,8 @@ export default function ApplicationDetailModal({
               {config.description}
             </p>
             {application.nextStep && application.status !== "Rejected" && (
-              <div className="mt-4 p-4 bg-white rounded-2xl border border-blue-100 flex items-center gap-4">
-                <div className="p-2 bg-blue-50 text-[#286ef0] rounded-xl">
+              <div className="mt-4 p-4 bg-white rounded-[10px] border border-blue-100 flex items-center gap-4">
+                <div className="p-2 bg-blue-50 text-[#286ef0] rounded-full">
                   <AlertCircle className="w-5 h-5" />
                 </div>
                 <div>
@@ -158,7 +147,7 @@ export default function ApplicationDetailModal({
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
+                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
                       <Briefcase className="w-5 h-5" />
                     </div>
                     <div>
@@ -171,7 +160,7 @@ export default function ApplicationDetailModal({
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400">
+                    <div className="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div>
@@ -193,23 +182,23 @@ export default function ApplicationDetailModal({
                   Resources
                 </h3>
                 <div className="space-y-3">
-                  <button className="w-full p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-[#286ef0] hover:bg-blue-50/30 transition-all group">
+                  <button className="w-full p-4 bg-white border border-gray-100 rounded-[10px] flex items-center justify-between hover:border-[#286ef0] hover:bg-blue-50/30 transition-all group">
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-gray-400 group-hover:text-[#286ef0]" />
                       <span className="text-sm font-bold text-[#25324B]">
                         View Submitted Resume
                       </span>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-gray-300" />
+                    <ExternalLink className="w-4 h-4 text-gray-300 group-hover:text-[#286ef0]" />
                   </button>
-                  <button className="w-full p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between hover:border-[#286ef0] hover:bg-blue-50/30 transition-all group">
+                  <button className="w-full p-4 bg-white border border-gray-100 rounded-[10px] flex items-center justify-between hover:border-[#286ef0] hover:bg-blue-50/30 transition-all group">
                     <div className="flex items-center gap-3">
                       <MessageSquare className="w-5 h-5 text-gray-400 group-hover:text-[#286ef0]" />
                       <span className="text-sm font-bold text-[#25324B]">
                         Contact Hiring Team
                       </span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300" />
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#286ef0]" />
                   </button>
                 </div>
               </section>
@@ -218,7 +207,7 @@ export default function ApplicationDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-8 border-t border-gray-100 flex gap-4">
+        <div className="p-8 border-t border-gray-100 flex gap-4 hidden">
           <button className="flex-1 py-4 bg-[#286ef0] text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-100 hover:bg-[#1f5fe0] transition-all">
             Withdraw Application
           </button>

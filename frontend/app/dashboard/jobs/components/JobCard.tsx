@@ -1,19 +1,20 @@
 "use client";
 
 import React from "react";
-import { 
-  Building2, 
-  MapPin, 
-  Clock, 
-  Briefcase, 
-  DollarSign, 
+import {
+  Building2,
+  MapPin,
+  Clock,
+  Briefcase,
+  DollarSign,
   ArrowRight,
   Bookmark,
   CheckCircle2,
-  ExternalLink
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { BsCash } from "react-icons/bs";
 
 export interface Job {
   id: string;
@@ -36,27 +37,29 @@ interface JobCardProps {
 
 export default function JobCard({ job, onClick }: JobCardProps) {
   return (
-    <Card 
-      className="group relative bg-white border border-gray-100 rounded-[20px] p-6 hover:shadow-[0_20px_50px_rgba(40,110,240,0.1)] hover:border-[#286ef0] transition-all duration-500 cursor-pointer"
+    <Card
+      className="group relative bg-white border border-gray-100 rounded-[10px] p-6 hover:border-[#286ef0] transition-all duration-500 cursor-pointer shadow-none"
       onClick={() => onClick(job.id)}
     >
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#F8F9FD] border border-gray-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 overflow-hidden">
-            {job.logo ? (
-              <img src={job.logo} alt={job.company} className="w-full h-full object-cover" />
-            ) : (
-              <Building2 className="w-7 h-7 text-[#286ef0]" />
-            )}
+          <div className="w-12 h-12 rounded-full bg-[#F8F9FD] border border-gray-50 flex items-center justify-center overflow-hidden">
+            <img
+              src="/images/companies/umurava.png"
+              alt="Umurava Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h3 className="text-lg font-bold text-[#25324B] group-hover:text-[#286ef0] transition-colors leading-tight">
               {job.title}
             </h3>
-            <p className="text-sm font-semibold text-[#7C8493] mt-1">{job.company}</p>
+            <p className="text-sm font-semibold text-[#7C8493] mt-1">
+              {job.company}
+            </p>
           </div>
         </div>
-        <button className="p-2 text-gray-300 hover:text-[#286ef0] hover:bg-blue-50 rounded-xl transition-all">
+        <button className="p-2 text-gray-300 hover:text-[#286ef0]  transition-all">
           <Bookmark className="w-5 h-5" />
         </button>
       </div>
@@ -71,7 +74,7 @@ export default function JobCard({ job, onClick }: JobCardProps) {
           {job.type}
         </div>
         <div className="flex items-center gap-2 text-[13px] font-medium text-[#444]">
-          <DollarSign className="w-4 h-4 text-gray-400" />
+          <BsCash className="w-4 h-4 text-gray-400" />
           {job.salary}
         </div>
         <div className="flex items-center gap-2 text-[13px] font-medium text-[#7C8493]">
@@ -83,7 +86,10 @@ export default function JobCard({ job, onClick }: JobCardProps) {
       <div className="flex items-center justify-between pt-5 border-t border-gray-50">
         <div className="flex flex-wrap gap-2">
           {job.tags.slice(0, 3).map((tag, i) => (
-            <Badge key={i} className="bg-[#F8F9FD] text-[#444] border-none px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg">
+            <Badge
+              key={i}
+              className="bg-[#F8F9FD] text-[#444] border-none px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg"
+            >
               {tag}
             </Badge>
           ))}
@@ -93,15 +99,15 @@ export default function JobCard({ job, onClick }: JobCardProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 text-sm font-bold text-[#286ef0] opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all duration-500">
+        <div className="flex items-center gap-1.5 text-sm font-bold text-[#286ef0]">
           View Details
           <ArrowRight className="w-4 h-4" />
         </div>
       </div>
-      
+
       {job.status === "Applied" && (
-        <div className="absolute -top-2 -right-2 bg-green-500 text-white p-1.5 rounded-full shadow-lg border-4 border-white">
-          <CheckCircle2 className="w-4 h-4" />
+        <div className="absolute -top-2 -right-2 bg-green-500 text-white p-0 px-2 rounded-full">
+          <span className="text-xs">Applied</span>
         </div>
       )}
     </Card>
