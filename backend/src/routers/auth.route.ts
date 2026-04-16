@@ -6,6 +6,7 @@ const authRouter: Router = express.Router();
 // Google OAuth
 authRouter.get("/google", authController.googleAuth);
 authRouter.get("/google/callback", authController.googleCallback);
+authRouter.post("/google/one-tap", authController.googleOneTap);
 
 // Registration
 authRouter.post("/register/google", authController.registerGoogle);

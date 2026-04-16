@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
+import { OAuth2Client } from "google-auth-library";
 import ENV from "../config/env";
 import {
   generateTokens,
@@ -10,6 +11,8 @@ import {
 } from "../services/auth.service";
 import { IGoogleProfile, UserRole, IUser } from "../types/user.types";
 import User from "../models/user.model";
+
+const googleClient = new OAuth2Client(ENV.google_client_id);
 
 const authController = {
   // Initiate Google OAuth
@@ -115,6 +118,66 @@ const authController = {
       res.redirect(
         `${ENV.frontend_url}/auth/error?message=${encodeURIComponent(error.message)}`,
       );
+    }
+  },
+
+  // Google One Tap Login
+  async googleOneTap(req: Request, res: Response) {
+    try {
+      const { credential, role }: { credential: string; role?: UserRole } =
+        req.body;
+
+      if (!credential) {
+        return res.status(400).json({ message: "Missing credential" });
+      }
+
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: ENV.google_client_id,
+      });
+
+      const payload = ticket.getPayload();
+      if (!payload || !payload.email) {
+        return res.status(401).json({ message: "Invalid Google credential" });
+      }
+
+      const googleProfile: IGoogleProfile = {
+        id: payload.sub || "",
+        displayName: payload.name || "",
+        name: {
+          familyName: payload.family_name || "",
+          givenName: payload.given_name || "",
+        },
+        emails: [{ value: payload.email, verified: !!payload.email_verified }],
+        photos: payload.picture ? [{ value: payload.picture }] : [],
+      };
+
+      const resolvedRole: UserRole = role || "talent";
+      const { user, isNew } = await findOrCreateUser(
+        googleProfile,
+        resolvedRole,
+      );
+      const tokens = generateTokens(user);
+
+      return res.status(200).json({
+        message: "Login successful",
+        isNew,
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          picture: user.picture,
+          role: user.role,
+          talentProfileId: user.talentProfileId,
+        },
+        tokens,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        message: "Google One Tap login failed",
+        error: error.message,
+      });
     }
   },
 
