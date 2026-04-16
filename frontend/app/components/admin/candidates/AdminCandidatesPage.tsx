@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   flexRender,
   getCoreRowModel,
@@ -24,13 +25,16 @@ import {
   ChevronRight,
   ArrowUp,
   ArrowDown,
+  Loader2,
 } from "lucide-react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
 import AdminApplicationDetailModal from "@/app/components/admin/applications/AdminApplicationDetailModal";
 import type { AdminApplicationRow } from "@/app/components/admin/applications/AdminApplicationsTable";
+import { api } from "@/lib/api/client";
 
 export type AdminCandidateRow = {
   id: string;
+  talentId: string;
   name: string;
   headline: string;
   location: string;
@@ -40,7 +44,46 @@ export type AdminCandidateRow = {
   availability: "Available" | "Open" | "Not Available";
   email: string;
   phone: string;
+  socialLinks?: string[];
 };
+
+type BackendTalent = {
+  _id: string;
+  headline: string;
+  location: string;
+  skills: { name: string }[];
+  experience: any[];
+  education: any[];
+  availability?: { status?: "Available" | "Open" | "Not Available" };
+  socialLinks?: string[];
+  userId?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+};
+
+function formatExperience(value: BackendTalent["experience"]) {
+  const n = Array.isArray(value) ? value.length : 0;
+  if (n <= 0) return "—";
+  if (n === 1) return "1 role";
+  return `${n} roles`;
+}
+
+function formatEducation(value: BackendTalent["education"]) {
+  const n = Array.isArray(value) ? value.length : 0;
+  if (n <= 0) return "—";
+  const latest = value[n - 1] as any;
+  const degree = String(latest?.degree ?? "").trim();
+  const field = String(latest?.fieldOfStudy ?? "").trim();
+  if (degree && field) return `${degree} • ${field}`;
+  return degree || field || "—";
+}
 
 export default function AdminCandidatesPage() {
   const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
@@ -49,56 +92,52 @@ export default function AdminCandidatesPage() {
     useState<AdminCandidateRow | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const candidates: AdminCandidateRow[] = [
-    {
-      id: "can_1",
-      name: "Justin Lipshutz",
-      headline: "Senior Product Designer",
-      location: "New York, USA",
-      skills: ["Figma", "UI/UX", "Prototyping"],
-      experience: "6+ years",
-      education: "Master's Degree",
-      availability: "Available",
-      email: "justin@example.com",
-      phone: "+1 234 567 890",
+  const talentsQuery = useQuery({
+    queryKey: ["admin", "talents"],
+    queryFn: async () => {
+      const res = await api.get("/talents");
+      const talents = (res.data?.talents ?? []) as BackendTalent[];
+      return Array.isArray(talents) ? talents : [];
     },
-    {
-      id: "can_2",
-      name: "Marcus Culhane",
-      headline: "Frontend Engineer",
-      location: "London, UK",
-      skills: ["React", "TypeScript", "Next.js"],
-      experience: "4 years",
-      education: "Bachelor's Degree",
-      availability: "Open",
-      email: "marcus@example.com",
-      phone: "+44 20 1234 5678",
-    },
-    {
-      id: "can_3",
-      name: "Sofia Rodriguez",
-      headline: "UX Researcher",
-      location: "Madrid, Spain",
-      skills: ["User Interviews", "Usability Testing"],
-      experience: "3 years",
-      education: "Master's Degree",
-      availability: "Available",
-      email: "sofia@example.com",
-      phone: "+34 91 123 4567",
-    },
-    {
-      id: "can_4",
-      name: "Avery Davis",
-      headline: "Fullstack Developer",
-      location: "San Francisco, USA",
-      skills: ["Node.js", "React", "PostgreSQL"],
-      experience: "5 years",
-      education: "Bachelor's Degree",
-      availability: "Not Available",
-      email: "avery@example.com",
-      phone: "+1 415 987 6543",
-    },
-  ];
+    staleTime: 30_000,
+  });
+
+  const candidates = useMemo((): AdminCandidateRow[] => {
+    const talents = talentsQuery.data ?? [];
+    return talents.map((t) => {
+      const firstName = String(
+        t?.userId?.firstName ?? t?.firstName ?? "",
+      ).trim();
+      const lastName = String(t?.userId?.lastName ?? t?.lastName ?? "").trim();
+      const name = `${firstName} ${lastName}`.trim() || "Unnamed talent";
+
+      const skills = Array.isArray(t?.skills)
+        ? t.skills
+            .map((s) => String(s?.name ?? "").trim())
+            .filter(Boolean)
+            .slice(0, 6)
+        : [];
+
+      const availability =
+        t?.availability?.status ??
+        ("Open" as AdminCandidateRow["availability"]);
+
+      return {
+        id: t._id,
+        talentId: t._id,
+        name,
+        headline: String(t?.headline ?? ""),
+        location: String(t?.location ?? ""),
+        skills,
+        experience: formatExperience(t?.experience),
+        education: formatEducation(t?.education),
+        availability,
+        email: String(t?.userId?.email ?? t?.email ?? ""),
+        phone: String(t?.userId?.phone ?? t?.phone ?? ""),
+        socialLinks: Array.isArray(t?.socialLinks) ? t.socialLinks : [],
+      };
+    });
+  }, [talentsQuery.data]);
 
   const filtered = useMemo(
     () =>
@@ -107,7 +146,7 @@ export default function AdminCandidatesPage() {
           c.name.toLowerCase().includes(query.toLowerCase()) ||
           c.headline.toLowerCase().includes(query.toLowerCase()),
       ),
-    [query],
+    [candidates, query],
   );
 
   const columns = useMemo<ColumnDef<AdminCandidateRow>[]>(
@@ -203,8 +242,17 @@ export default function AdminCandidatesPage() {
     },
   });
 
+  const isLoading = talentsQuery.isLoading;
+  const errorMessage = (talentsQuery.error as any)?.message || null;
+
   return (
     <div className="space-y-6">
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+          Failed to load candidates. {errorMessage}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -262,7 +310,21 @@ export default function AdminCandidatesPage() {
       </div>
 
       {/* Content */}
-      {viewMode === "cards" ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mb-2" />
+          <p className="text-sm text-[#7C8493]">Loading candidates...</p>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white py-20">
+          <p className="text-sm font-semibold text-[#25324B]">
+            No candidates found
+          </p>
+          <p className="text-xs text-[#7C8493] mt-1">
+            Try adjusting your search query.
+          </p>
+        </div>
+      ) : viewMode === "cards" ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filtered.map((candidate) => (
             <div
@@ -275,13 +337,41 @@ export default function AdminCandidatesPage() {
                 </div>
                 <div className="flex gap-2">
                   <a
-                    href="#"
+                    href={
+                      candidate.socialLinks?.find((l) =>
+                        l.includes("linkedin"),
+                      ) ?? "#"
+                    }
+                    target={
+                      candidate.socialLinks?.some((l) => l.includes("linkedin"))
+                        ? "_blank"
+                        : undefined
+                    }
+                    rel={
+                      candidate.socialLinks?.some((l) => l.includes("linkedin"))
+                        ? "noopener noreferrer"
+                        : undefined
+                    }
                     className="h-8 w-8 rounded-lg border border-gray-100 flex items-center justify-center text-[#7C8493] hover:text-[#0A66C2] hover:bg-indigo-50 hover:border-indigo-100 transition-colors"
                   >
                     <FaLinkedin className="h-4 w-4" />
                   </a>
                   <a
-                    href="#"
+                    href={
+                      candidate.socialLinks?.find((l) =>
+                        l.includes("github"),
+                      ) ?? "#"
+                    }
+                    target={
+                      candidate.socialLinks?.some((l) => l.includes("github"))
+                        ? "_blank"
+                        : undefined
+                    }
+                    rel={
+                      candidate.socialLinks?.some((l) => l.includes("github"))
+                        ? "noopener noreferrer"
+                        : undefined
+                    }
                     className="h-8 w-8 rounded-lg border border-gray-100 flex items-center justify-center text-[#7C8493] hover:text-[#181717] hover:bg-gray-50 hover:border-gray-200 transition-colors"
                   >
                     <FaGithub className="h-4 w-4" />
@@ -420,6 +510,7 @@ export default function AdminCandidatesPage() {
           application={
             {
               id: selectedCandidate.id,
+              talentId: selectedCandidate.talentId,
               talentName: selectedCandidate.name,
               talentHeadline: selectedCandidate.headline,
               talentLocation: selectedCandidate.location,

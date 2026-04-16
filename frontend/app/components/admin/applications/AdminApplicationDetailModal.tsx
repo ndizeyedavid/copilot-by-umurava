@@ -51,12 +51,10 @@ type BackendTalent = {
     type: string;
   };
   socialLinks: string[];
-  userId: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-  };
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
 };
 
 export default function AdminApplicationDetailModal({
@@ -79,6 +77,9 @@ export default function AdminApplicationDetailModal({
 
   const talent = talentQuery.data;
   const isLoading = talentQuery.isLoading;
+  const hasResume =
+    !!application.resumeUrl && application.resumeUrl.trim() !== "#";
+  const hasCoverLetter = !!application.coverLetter?.trim();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
@@ -98,15 +99,17 @@ export default function AdminApplicationDetailModal({
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <a
-              href={application.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
-            >
-              <FileText className="h-4 w-4" />
-              Download Resume
-            </a>
+            {hasResume && (
+              <a
+                href={application.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+              >
+                <FileText className="h-4 w-4" />
+                Download Resume
+              </a>
+            )}
             <button
               onClick={onClose}
               className="rounded-full p-2 hover:bg-gray-100 transition-colors"
@@ -216,6 +219,48 @@ export default function AdminApplicationDetailModal({
                     )}
                   </div>
                 </section>
+
+                <section>
+                  <h3 className="text-base font-bold text-[#25324B] mb-4">
+                    Projects
+                  </h3>
+                  <div className="space-y-4">
+                    {talent.projects?.length > 0 ? (
+                      talent.projects.map((project, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-2xl border border-gray-100 bg-white p-5"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h4 className="text-sm font-bold text-[#25324B]">
+                                {project.name}
+                              </h4>
+                              <p className="mt-1 text-sm text-[#7C8493] leading-relaxed">
+                                {project.description}
+                              </p>
+                            </div>
+                            {project.link && (
+                              <a
+                                href={project.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-[#25324B] hover:bg-gray-50"
+                              >
+                                <ExternalLink className="h-4 w-4 text-gray-500" />
+                                Visit
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-[#7C8493]">
+                        No projects listed.
+                      </p>
+                    )}
+                  </div>
+                </section>
               </div>
 
               <div className="space-y-8">
@@ -230,16 +275,12 @@ export default function AdminApplicationDetailModal({
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Mail className="h-4 w-4 text-gray-400 shrink-0" />
-                      <span className="text-gray-600">
-                        {talent.userId.email}
-                      </span>
+                      <span className="text-gray-600">{talent.email}</span>
                     </div>
-                    {talent.userId.phone && (
+                    {talent.phone && (
                       <div className="flex items-center gap-3 text-sm">
                         <Phone className="h-4 w-4 text-gray-400 shrink-0" />
-                        <span className="text-gray-600">
-                          {talent.userId.phone}
-                        </span>
+                        <span className="text-gray-600">{talent.phone}</span>
                       </div>
                     )}
                     <div className="pt-2 flex gap-3">
@@ -328,16 +369,18 @@ export default function AdminApplicationDetailModal({
             </div>
           )}
 
-          <div className="mt-8 border-t border-gray-100 pt-8">
-            <h3 className="text-base font-bold text-[#25324B] mb-4">
-              Cover Letter
-            </h3>
-            <div className="rounded-2xl bg-gray-50 p-6">
-              <p className="text-sm text-[#7C8493] leading-relaxed whitespace-pre-wrap italic">
-                {application.coverLetter || "No cover letter provided."}
-              </p>
+          {hasCoverLetter && (
+            <div className="mt-8 border-t border-gray-100 pt-8">
+              <h3 className="text-base font-bold text-[#25324B] mb-4">
+                Cover Letter
+              </h3>
+              <div className="rounded-2xl bg-gray-50 p-6">
+                <p className="text-sm text-[#7C8493] leading-relaxed whitespace-pre-wrap italic">
+                  {application.coverLetter}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
