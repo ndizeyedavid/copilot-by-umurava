@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
 import AdminJobsCards from "@/app/components/admin/jobs/AdminJobsCards";
 import AdminJobsTable, {
@@ -9,129 +10,56 @@ import AdminJobsTable, {
   type SortKey,
 } from "@/app/components/admin/jobs/AdminJobsTable";
 import AdminJobsToolbar from "@/app/components/admin/jobs/AdminJobsToolbar";
+import { api } from "@/lib/api/client";
 
-const mockJobs: AdminJobRow[] = [
-  {
-    id: "job_1",
-    title: "Senior Frontend Engineer",
-    company: "Umurava",
-    location: "Kigali, Rwanda",
-    type: "Full-time",
-    status: "Open",
-    postedAt: "2026-04-10",
-    deadline: "2026-04-20",
-    applicants: 48,
-    views: 312,
-  },
-  {
-    id: "job_2",
-    title: "Backend Developer",
-    company: "TechCorp Solutions",
-    location: "Nairobi, Kenya",
-    type: "Full-time",
-    status: "Open",
-    postedAt: "2026-04-11",
-    deadline: "2026-04-22",
-    applicants: 64,
-    views: 401,
-  },
-  {
-    id: "job_3",
-    title: "Product Designer",
-    company: "Copilot Team",
-    location: "Remote",
-    type: "Contract",
-    status: "Open",
-    postedAt: "2026-04-12",
-    deadline: "2026-04-25",
-    applicants: 31,
-    views: 220,
-  },
-  {
-    id: "job_4",
-    title: "Data Analyst",
-    company: "Digital Innovations",
-    location: "Hybrid",
-    type: "Part-time",
-    status: "Closed",
-    postedAt: "2026-03-28",
-    deadline: "2026-04-08",
-    applicants: 92,
-    views: 520,
-  },
-  {
-    id: "job_5",
-    title: "UI/UX Designer (Intern)",
-    company: "Creative Studios",
-    location: "Kampala, Uganda",
-    type: "Internship",
-    status: "Draft",
-    postedAt: "2026-04-13",
-    deadline: "2026-04-30",
-    applicants: 0,
-    views: 0,
-  },
-  {
-    id: "job_6",
-    title: "DevOps Engineer",
-    company: "CloudTech Inc",
-    location: "Remote",
-    type: "Full-time",
-    status: "Open",
-    postedAt: "2026-04-14",
-    deadline: "2026-04-28",
-    applicants: 27,
-    views: 198,
-  },
-  {
-    id: "job_7",
-    title: "Customer Success Specialist",
-    company: "Enterprise Solutions",
-    location: "Kigali, Rwanda",
-    type: "Full-time",
-    status: "Open",
-    postedAt: "2026-04-06",
-    deadline: "2026-04-24",
-    applicants: 19,
-    views: 140,
-  },
-  {
-    id: "job_8",
-    title: "QA Engineer",
-    company: "StartupHub",
-    location: "Nairobi, Kenya",
-    type: "Contract",
-    status: "Closed",
-    postedAt: "2026-03-19",
-    deadline: "2026-04-02",
-    applicants: 53,
-    views: 298,
-  },
-  {
-    id: "job_9",
-    title: "Mobile Developer (React Native)",
-    company: "Digital Innovations",
-    location: "Remote",
-    type: "Full-time",
-    status: "Open",
-    postedAt: "2026-04-09",
-    deadline: "2026-04-27",
-    applicants: 22,
-    views: 174,
-  },
-  {
-    id: "job_10",
-    title: "HR Assistant",
-    company: "Umurava",
-    location: "Kigali, Rwanda",
-    type: "Part-time",
-    status: "Draft",
-    postedAt: "2026-04-07",
-    deadline: "2026-05-01",
-    applicants: 0,
-    views: 0,
-  },
-];
+type BackendJob = {
+  _id?: string;
+  id?: string;
+  title?: string;
+  jobType?: string;
+  locationType?: string;
+  deadline?: string | Date;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+type BackendApplication = {
+  _id?: string;
+  id?: string;
+  jobId?: string;
+  talentId?: string;
+  status?: string;
+  createdAt?: string;
+};
+
+function formatDate(value: string | Date | undefined) {
+  if (!value) return "—";
+  const dt = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(dt.getTime())) return "—";
+  return dt.toISOString().slice(0, 10);
+}
+
+function mapJobType(jobType: string | undefined): AdminJobRow["type"] {
+  if (jobType === "part-time") return "Part-time";
+  if (jobType === "full-time") return "Full-time";
+  return "Full-time";
+}
+
+function mapLocation(locationType: string | undefined) {
+  if (locationType === "remote") return "Remote";
+  if (locationType === "hybrid") return "Hybrid";
+  if (locationType === "on-site") return "On-site";
+  return "—";
+}
+
+function deriveStatus(
+  deadline: string | Date | undefined,
+): AdminJobRow["status"] {
+  if (!deadline) return "Open";
+  const dt = typeof deadline === "string" ? new Date(deadline) : deadline;
+  if (Number.isNaN(dt.getTime())) return "Open";
+  return dt.getTime() >= Date.now() ? "Open" : "Closed";
+}
 
 function compare(a: AdminJobRow, b: AdminJobRow, key: SortKey) {
   const va = a[key];
@@ -143,6 +71,60 @@ function compare(a: AdminJobRow, b: AdminJobRow, key: SortKey) {
 
 export default function AdminJobsPage() {
   const router = useRouter();
+
+  const jobsQuery = useQuery({
+    queryKey: ["admin", "jobs"],
+    queryFn: async () => {
+      const res = await api.get("/jobs");
+      const jobs = (res.data?.jobs ?? []) as BackendJob[];
+      return Array.isArray(jobs) ? jobs : [];
+    },
+    staleTime: 30_000,
+  });
+
+  const applicationsQuery = useQuery({
+    queryKey: ["admin", "applications"],
+    queryFn: async () => {
+      const res = await api.get("/applications");
+      const applications = (res.data?.applications ??
+        []) as BackendApplication[];
+      return Array.isArray(applications) ? applications : [];
+    },
+    staleTime: 30_000,
+  });
+
+  const rows = useMemo((): AdminJobRow[] => {
+    const apps = applicationsQuery.data ?? [];
+    const counts = new Map<string, number>();
+    for (const app of apps) {
+      const jobId = app?.jobId;
+      if (!jobId) continue;
+      counts.set(jobId, (counts.get(jobId) ?? 0) + 1);
+    }
+
+    const jobs = jobsQuery.data ?? [];
+    return jobs
+      .map((job): AdminJobRow | null => {
+        const id = String(job?._id ?? job?.id ?? "").trim();
+        if (!id) return null;
+
+        const deadline = job?.deadline;
+
+        return {
+          id,
+          title: String(job?.title ?? "Untitled job"),
+          company: "—",
+          location: mapLocation(job?.locationType),
+          type: mapJobType(job?.jobType),
+          status: deriveStatus(deadline),
+          postedAt: formatDate(job?.createdAt),
+          deadline: formatDate(deadline),
+          applicants: counts.get(id) ?? 0,
+          views: 0,
+        };
+      })
+      .filter((v): v is AdminJobRow => Boolean(v));
+  }, [applicationsQuery.data, jobsQuery.data]);
 
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [query, setQuery] = useState("");
@@ -157,7 +139,7 @@ export default function AdminJobsPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
 
-    return mockJobs.filter((job) => {
+    return rows.filter((job) => {
       const matchesQuery =
         q.length === 0 ||
         job.title.toLowerCase().includes(q) ||
@@ -168,7 +150,7 @@ export default function AdminJobsPage() {
 
       return matchesQuery && matchesStatus && matchesType;
     });
-  }, [query, status, type]);
+  }, [query, rows, status, type]);
 
   const sorted = useMemo(() => {
     const copy = [...filtered];
@@ -214,6 +196,12 @@ export default function AdminJobsPage() {
     }
   };
 
+  const isLoading = jobsQuery.isLoading || applicationsQuery.isLoading;
+  const errorMessage =
+    (jobsQuery.error as any)?.message ||
+    (applicationsQuery.error as any)?.message ||
+    null;
+
   return (
     <div className="space-y-5">
       <AdminJobsToolbar
@@ -242,7 +230,19 @@ export default function AdminJobsPage() {
         totalLabel={`${total} jobs`}
       />
 
-      {viewMode === "table" ? (
+      {errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+          Failed to load jobs. {errorMessage}
+        </div>
+      )}
+
+      {isLoading && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm font-semibold text-[#25324B]">
+          Loading jobs...
+        </div>
+      )}
+
+      {!isLoading && viewMode === "table" ? (
         <AdminJobsTable
           rows={paged}
           sort={sort}
@@ -254,9 +254,9 @@ export default function AdminJobsPage() {
           onNext={onNext}
           onRowAction={onRowAction}
         />
-      ) : (
+      ) : !isLoading ? (
         <AdminJobsCards rows={paged} onAction={onRowAction} />
-      )}
+      ) : null}
     </div>
   );
 }
