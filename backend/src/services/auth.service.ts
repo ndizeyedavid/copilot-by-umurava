@@ -98,6 +98,7 @@ export async function createUser(
   password?: string,
   googleId?: string,
   picture?: string,
+  phone?: string,
   talentProfileId?: string,
 ): Promise<IUser> {
   const userDoc = new User({
@@ -107,6 +108,7 @@ export async function createUser(
     firstName,
     lastName,
     picture,
+    phone,
     role,
     talentProfileId,
   });
@@ -134,6 +136,7 @@ export async function createGoogleUser(
     undefined,
     googleProfile.id,
     googleProfile.photos?.[0]?.value,
+    undefined,
     talentProfileId,
   );
 }

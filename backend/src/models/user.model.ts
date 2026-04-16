@@ -6,7 +6,6 @@ const userSchema = new Schema<IUser>(
   {
     googleId: {
       type: String,
-      unique: true,
       sparse: true,
     },
     email: {
@@ -25,6 +24,9 @@ const userSchema = new Schema<IUser>(
     lastName: {
       type: String,
       // required: true,
+    },
+    phone: {
+      type: String,
     },
     picture: {
       type: String,

@@ -3,10 +3,83 @@ import { GoogleLogin } from "@react-oauth/google";
 import Link from "next/link";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
+import { useForm, Controller } from "react-hook-form";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { api } from "@/lib/api/client";
+import { useDispatch } from "react-redux";
+import { setAuth } from "@/lib/store/authSlice";
+import { useRouter } from "next/navigation";
+
+type RegisterValues = {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  password: string;
+};
+
+type AuthResponse = {
+  user: any;
+  tokens: {
+    accessToken: string;
+    refreshToken?: string;
+  };
+};
 
 export default function RegisterForm() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<RegisterValues>();
+
+  const registerMutation = useMutation<AuthResponse, any, RegisterValues>({
+    mutationFn: async (values) => {
+      const res = await api.post("/auth/register/local", {
+        ...values,
+        role: "talent",
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      dispatch(setAuth({ user: data.user, tokens: data.tokens }));
+      toast.success("Account created");
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      const message = error?.response?.data?.message || "Registration failed";
+      toast.error(message);
+    },
+  });
+
+  const googleMutation = useMutation<AuthResponse, any, string>({
+    mutationFn: async (credential) => {
+      const res = await api.post("/auth/google/one-tap", {
+        credential,
+        role: "talent",
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      dispatch(setAuth({ user: data.user, tokens: data.tokens }));
+      toast.success("Signed up");
+      router.push("/dashboard");
+    },
+    onError: () => {
+      toast.error("Google sign up failed");
+    },
+  });
+
   return (
-    <form className="space-y-4 py-2">
+    <form
+      className="space-y-4 py-2"
+      onSubmit={handleSubmit((values) => registerMutation.mutate(values))}
+    >
       {/* First Name & Last Name */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -16,8 +89,14 @@ export default function RegisterForm() {
           <input
             type="text"
             placeholder="John"
+            {...register("firstName", { required: "First name is required" })}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#286ef0] transition-colors"
           />
+          {errors.firstName && (
+            <p className="text-xs text-red-600 mt-1">
+              {errors.firstName.message}
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -26,6 +105,7 @@ export default function RegisterForm() {
           <input
             type="text"
             placeholder="Doe"
+            {...register("lastName")}
             className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#286ef0] transition-colors"
           />
         </div>
@@ -39,8 +119,12 @@ export default function RegisterForm() {
         <input
           type="email"
           placeholder="Enter your email address"
+          {...register("email", { required: "Email is required" })}
           className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#286ef0] transition-colors"
         />
+        {errors.email && (
+          <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>
+        )}
       </div>
 
       {/* Phone Number */}
@@ -48,12 +132,19 @@ export default function RegisterForm() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Phone Number
         </label>
-        <PhoneInput
-          international
-          defaultCountry="RW"
-          onChange={() => {}}
-          placeholder="Enter phone number"
-          className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus-within:border-[#286ef0] transition-colors bg-white"
+        <Controller
+          control={control}
+          name="phone"
+          render={({ field }) => (
+            <PhoneInput
+              international
+              defaultCountry="RW"
+              value={field.value}
+              onChange={field.onChange}
+              placeholder="Enter phone number"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus-within:border-[#286ef0] transition-colors bg-white"
+            />
+          )}
         />
       </div>
 
@@ -65,17 +156,42 @@ export default function RegisterForm() {
         <input
           type="password"
           placeholder="Create a password"
+          {...register("password", { required: "Password is required" })}
           className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm outline-none focus:border-[#286ef0] transition-colors"
         />
+        {errors.password && (
+          <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
+        )}
       </div>
 
       {/* Register button */}
       <button
         type="submit"
+        disabled={registerMutation.isPending}
         className="w-full py-3 bg-[#286ef0] text-white font-medium rounded-lg hover:bg-[#2566de] transition-colors"
       >
-        Create Account
+        {registerMutation.isPending ? "Creating..." : "Create Account"}
       </button>
+
+      <div className="flex items-center gap-4  mb-2 text-black/50">
+        <div className="w-full h-px bg-black/50" />
+        <span>Or</span>
+        <div className="w-full h-px bg-black/50" />
+      </div>
+
+      <GoogleLogin
+        onSuccess={(credentialResponse) => {
+          if (!credentialResponse.credential) {
+            toast.error("Missing Google credential");
+            return;
+          }
+
+          googleMutation.mutate(credentialResponse.credential);
+        }}
+        onError={() => {
+          toast.error("Google sign up failed");
+        }}
+      />
 
       <div className="text-center mt-2">
         <span className="text-sm w-full">

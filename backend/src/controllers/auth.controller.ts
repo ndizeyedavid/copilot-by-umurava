@@ -247,7 +247,8 @@ const authController = {
   // Local Registration (Email/Password)
   async registerLocal(req: Request, res: Response) {
     try {
-      const { email, password, firstName, lastName, role }: any = req.body;
+      const { email, password, firstName, lastName, role, phone }: any =
+        req.body;
 
       if (!email || !password || !firstName || !role) {
         return res.status(400).json({
@@ -272,6 +273,9 @@ const authController = {
         lastName,
         role,
         hashedPassword,
+        undefined,
+        undefined,
+        phone,
       );
       const tokens = generateTokens(user);
 
@@ -282,6 +286,7 @@ const authController = {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: user.phone,
           role: user.role,
         },
         tokens,
@@ -329,6 +334,7 @@ const authController = {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: (user as any).phone,
           role: user.role,
           talentProfileId: user.talentProfileId,
         },
