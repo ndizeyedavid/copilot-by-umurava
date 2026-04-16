@@ -1,0 +1,109 @@
+"use client";
+
+import React from "react";
+import { CheckCircle2, FileText } from "lucide-react";
+
+interface StatusItemProps {
+  label: string;
+  isCompleted: boolean;
+  isRequired?: boolean;
+}
+
+const StatusItem = ({ label, isCompleted, isRequired }: StatusItemProps) => (
+  <div className="flex items-center gap-2 py-1">
+    <CheckCircle2
+      className={`w-5 h-5 ${isCompleted ? "text-green-500" : "text-gray-300"}`}
+    />
+    <span className="text-sm font-medium text-[#444] leading-none">
+      {label}
+      {isRequired && <span className="text-[#d93025] ml-0.5">*</span>}
+    </span>
+  </div>
+);
+
+export default function ProfileStatus() {
+  const percentage = 87;
+
+  return (
+    <div className="bg-white rounded-[10px] overflow-hidden shadow-none border border-gray-100">
+      <div className="bg-[#1e5631] px-6 py-4">
+        <h2 className="text-white text-lg font-bold uppercase tracking-wider">
+          Profile Status
+        </h2>
+      </div>
+
+      <div className="p-6">
+        <p className="text-[#d93025] text-xs font-semibold mb-4">
+          * is required
+        </p>
+
+        <div className="flex justify-between items-start mb-6">
+          <div className="space-y-1">
+            <StatusItem
+              label="Education"
+              isCompleted={true}
+              isRequired={true}
+            />
+            <StatusItem
+              label="Languages"
+              isCompleted={true}
+              isRequired={true}
+            />
+            <StatusItem
+              label="Disability"
+              isCompleted={false}
+              isRequired={true}
+            />
+            <StatusItem
+              label="Upload CV"
+              isCompleted={true}
+              isRequired={true}
+            />
+            <StatusItem label="Experience" isCompleted={false} />
+            <StatusItem label="Certificates" isCompleted={true} />
+          </div>
+
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle
+                cx="48"
+                cy="48"
+                r="40"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="transparent"
+                className="text-gray-100"
+              />
+              <circle
+                cx="48"
+                cy="48"
+                r="40"
+                stroke="currentColor"
+                strokeWidth="4"
+                fill="transparent"
+                strokeDasharray={251.2}
+                strokeDashoffset={251.2 - (251.2 * percentage) / 100}
+                className="text-green-500 transition-all duration-1000"
+              />
+            </svg>
+            <span className="absolute text-xl font-bold text-green-600">
+              {percentage}%
+            </span>
+          </div>
+        </div>
+
+        <button className="w-full bg-[#f8f9fa] cursor-pointer hover:bg-gray-100 border border-gray-200 rounded-2xl p-4 transition-colors flex items-center gap-4">
+          <div className="bg-white p-2 rounded-lg shadow-sm">
+            <FileText className="w-6 h-6 text-[#d93025]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-bold text-[#25324B]">View uploaded CV</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              PDF
+            </p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
