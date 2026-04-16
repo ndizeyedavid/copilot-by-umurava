@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { api } from "@/lib/api/client";
+import SafeHtml from "@/app/components/SafeHtml";
 
 type JobDetails = {
   id: string;
@@ -280,9 +281,10 @@ export default function AdminJobDetailsPage() {
                 <p className="text-lg font-semibold text-[#25324B]">
                   Description
                 </p>
-                <p className="mt-3 text-sm leading-6 text-[#25324B]">
-                  {job.description}
-                </p>
+                <SafeHtml
+                  html={job.description}
+                  className="mt-3 text-sm leading-6 text-[#25324B]"
+                />
               </div>
 
               <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

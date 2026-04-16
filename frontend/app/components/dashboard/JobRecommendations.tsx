@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Briefcase, CalendarDays, Filter, MapPin, Timer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { stripHtmlToText } from "@/app/components/SafeHtml";
 
 type Job = {
   title: string;
@@ -63,7 +64,7 @@ export default function JobRecommendations({ jobs }: { jobs: Job[] }) {
             </div>
 
             <p className="mt-4 text-sm text-[#4B5563] leading-relaxed line-clamp-3">
-              {job.description}
+              {stripHtmlToText(job.description)}
             </p>
 
             <div className="mt-5 flex items-center gap-6 text-xs text-[#7C8493]">

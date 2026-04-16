@@ -1,107 +1,43 @@
+"use client";
+
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api/client";
+import { stripHtmlToText } from "./SafeHtml";
 
-interface Job {
+type ApiJob = {
+  _id: string;
   title: string;
-  company: string;
-  location: string;
   description: string;
-  type: string;
-  logo: string;
-  tags: { name: string; color: string }[];
-}
+  requirements?: string[];
+  deadline?: string;
+  jobType: string;
+  locationType: string;
+  status: "open" | "closed" | "draft";
+};
 
-const jobs: Job[] = [
-  {
-    title: "Email Marketing",
-    company: "Revolut",
-    location: "Madrid, Spain",
-    description: "Revolut is looking for Email Marketing to help team t ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [
-      { name: "Marketing", color: "bg-orange-100 text-orange-600" },
-      { name: "Design", color: "bg-green-100 text-green-600" },
-    ],
-  },
-  {
-    title: "Brand Designer",
-    company: "Dropbox",
-    location: "San Francisco, US",
-    description: "Dropbox is looking for Brand Designer to help the team t ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [
-      { name: "Design", color: "bg-green-100 text-green-600" },
-      { name: "Business", color: "bg-purple-100 text-purple-600" },
-    ],
-  },
-  {
-    title: "Email Marketing",
-    company: "Pitch",
-    location: "Berlin, Germany",
-    description:
-      "Pitch is looking for Customer Manager to join marketing t ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [{ name: "Marketing", color: "bg-orange-100 text-orange-600" }],
-  },
-  {
-    title: "Visual Designer",
-    company: "Blinkist",
-    location: "Granada, Spain",
-    description:
-      "Blinkist is looking for Visual Designer to help team desi ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [{ name: "Design", color: "bg-green-100 text-green-600" }],
-  },
-  {
-    title: "Product Designer",
-    company: "ClassPass",
-    location: "Manchester, UK",
-    description:
-      "ClassPass is looking for Product Designer to help develop n ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [
-      { name: "Marketing", color: "bg-orange-100 text-orange-600" },
-      { name: "Design", color: "bg-green-100 text-green-600" },
-    ],
-  },
-  {
-    title: "Lead Designer",
-    company: "Canva",
-    location: "Ontario, Canada",
-    description: "Canva is looking for Lead Engineer to help develop n ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [
-      { name: "Design", color: "bg-green-100 text-green-600" },
-      { name: "Business", color: "bg-purple-100 text-purple-600" },
-    ],
-  },
-  {
-    title: "Brand Strategist",
-    company: "GoDaddy",
-    location: "Marseille, France",
-    description: "GoDaddy is looking for Brand Strategist to join the team...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [{ name: "Marketing", color: "bg-orange-100 text-orange-600" }],
-  },
-  {
-    title: "Data Analyst",
-    company: "Twitter",
-    location: "San Diego, US",
-    description: "Twitter is looking for Data Analyst to help team desi ...",
-    type: "Full Time",
-    logo: "/images/companies/dummy.png",
-    tags: [{ name: "Technology", color: "bg-red-100 text-red-600" }],
-  },
+const tagColors = [
+  "bg-orange-100 text-orange-600",
+  "bg-green-100 text-green-600",
+  "bg-purple-100 text-purple-600",
+  "bg-red-100 text-red-600",
 ];
 
 export default function FeaturedJobsSection() {
+  const jobsQuery = useQuery({
+    queryKey: ["jobs", "featured"],
+    queryFn: async () => {
+      const res = await api.get("/jobs");
+      return (res.data?.jobs ?? []) as ApiJob[];
+    },
+    staleTime: 60_000,
+  });
+
+  const featuredJobs = (jobsQuery.data ?? [])
+    .filter((j) => j.status === "open")
+    .slice(0, 8);
+
   return (
     <section className="py-16 bg-white">
       <div className="mx-[122px]">
@@ -111,7 +47,7 @@ export default function FeaturedJobsSection() {
             Featured <span className="text-[#286ef0]">jobs</span>
           </h2>
           <a
-            href=""
+            href="/dashboard/jobs"
             className="flex items-center gap-2 text-sm font-medium text-[#4F46E5] hover:text-[#4338CA]"
           >
             Show all jobs
@@ -121,51 +57,68 @@ export default function FeaturedJobsSection() {
 
         {/* Jobs Grid */}
         <div className="grid grid-cols-4 gap-6">
-          {jobs.map((job) => (
-            <div
-              key={`${job.title}-${job.company}`}
-              className="p-6 border border-gray-100 hover:border-[#286ef0] hover:shadow-md transition-all cursor-pointer"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden">
-                  <Image
-                    src={job.logo}
-                    alt={job.company}
-                    width={32}
-                    height={32}
-                    className="object-contain"
-                  />
-                </div>
-                <span className="px-3 py-1 text-xs font-medium text-[#4F46E5] border border-[#4F46E5] rounded">
-                  {job.type}
-                </span>
-              </div>
-
-              {/* Job Info */}
-              <h3 className="text-lg font-semibold text-[#25324B] mb-1">
-                {job.title}
-              </h3>
-              <p className="text-sm text-gray-500 mb-3">{job.location}</p>
-
-              {/* Description */}
-              <p className="text-sm text-gray-400 mb-4 line-clamp-2">
-                {job.description}
-              </p>
-
-              {/* Tags */}
-              <div className="flex items-center gap-2">
-                {job.tags.map((tag) => (
-                  <span
-                    key={tag.name}
-                    className={`px-3 py-1 text-xs font-medium rounded-full ${tag.color}`}
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
+          {jobsQuery.isLoading ? (
+            <div className="col-span-4 py-12 text-center text-sm font-semibold text-gray-500">
+              Loading jobs...
             </div>
-          ))}
+          ) : jobsQuery.isError ? (
+            <div className="col-span-4 py-12 text-center text-sm font-semibold text-red-600">
+              Failed to load jobs
+            </div>
+          ) : featuredJobs.length === 0 ? (
+            <div className="col-span-4 py-12 text-center text-sm font-semibold text-gray-500">
+              No featured jobs available
+            </div>
+          ) : (
+            featuredJobs.map((job) => (
+              <a
+                key={job._id}
+                href={`/dashboard/jobs?jobId=${encodeURIComponent(job._id)}`}
+                className="p-6 border border-gray-100 hover:border-[#286ef0] hover:shadow-md transition-all cursor-pointer"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden">
+                    <Image
+                      src="/images/companies/dummy.png"
+                      alt="Company"
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="px-3 py-1 text-xs font-medium text-[#4F46E5] border border-[#4F46E5] rounded">
+                    {job.jobType}
+                  </span>
+                </div>
+
+                {/* Job Info */}
+                <h3 className="text-lg font-semibold text-[#25324B] mb-1">
+                  {job.title}
+                </h3>
+                <p className="text-sm text-gray-500 mb-3">{job.locationType}</p>
+
+                {/* Description */}
+                <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                  {stripHtmlToText(job.description)}
+                </p>
+
+                {/* Tags */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {(job.requirements ?? []).slice(0, 2).map((req, idx) => (
+                    <span
+                      key={`${job._id}_${idx}`}
+                      className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        tagColors[idx % tagColors.length]
+                      }`}
+                    >
+                      {req}
+                    </span>
+                  ))}
+                </div>
+              </a>
+            ))
+          )}
         </div>
       </div>
     </section>
