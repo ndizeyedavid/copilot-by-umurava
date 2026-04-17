@@ -57,7 +57,7 @@ export default function ApplicationsPage() {
   });
 
   const backendApplications = applicationsQuery.data ?? [];
-
+  console.log(backendApplications);
   const applications = useMemo((): Application[] => {
     return backendApplications.map((app) => {
       const job = app.jobId;
@@ -115,12 +115,9 @@ export default function ApplicationsPage() {
     }
   };
 
-  if (applicationsQuery.isLoading) {
-    return <div className="p-8 text-center">Loading applications...</div>;
-  }
-
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-2">
+      <phantom-ui loading={applicationsQuery.isLoading}>
       <div className="mx-auto space-y-6">
         {/* Header & Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -221,7 +218,6 @@ export default function ApplicationsPage() {
               />
             </div>
           </Card>
-
           <div className="grid grid-cols-1 gap-4">
             {filteredApplications.length > 0 ? (
               filteredApplications.map((app) => (
@@ -249,6 +245,7 @@ export default function ApplicationsPage() {
           </div>
         </div>
 
+            
         {selectedApplication && (
           <ApplicationDetailModal
             isOpen={isModalOpen}
@@ -257,6 +254,7 @@ export default function ApplicationsPage() {
           />
         )}
       </div>
+      </phantom-ui>
     </div>
   );
 }

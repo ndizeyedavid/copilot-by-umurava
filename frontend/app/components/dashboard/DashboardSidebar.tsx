@@ -165,10 +165,12 @@ export default function DashboardSidebar() {
   const userHeadline = talent?.headline || "Talent";
 
   return (
+   
     <aside className="sticky top-[72px] h-[calc(100vh-72px)] w-[240px] shrink-0 bg-white border-r border-gray-100">
       <div className="h-full px-5 py-12 flex flex-col">
         {/* User card */}
         <div className="flex items-center justify-between mb-8">
+           <phantom-ui loading={!user}>
           <div className="flex items-center gap-3">
             <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
               <Image
@@ -186,6 +188,7 @@ export default function DashboardSidebar() {
               <p className="text-xs text-[#7C8493] line-clamp-1">{userHeadline}</p>
             </div>
           </div>
+          </phantom-ui>
         </div>
 
         {/* Main nav */}

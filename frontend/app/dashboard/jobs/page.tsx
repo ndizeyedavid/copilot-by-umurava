@@ -137,12 +137,9 @@ export default function JobsPage() {
     applyMutation.mutate(id);
   };
 
-  if (jobsQuery.isLoading) {
-    return <div className="p-8 text-center">Loading jobs...</div>;
-  }
-
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-2">
+      <phantom-ui loading={jobsQuery.isLoading}>
       <div className="mx-auto space-y-6">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -213,6 +210,7 @@ export default function JobsPage() {
           />
         )}
       </div>
+    </phantom-ui>
     </div>
   );
 }

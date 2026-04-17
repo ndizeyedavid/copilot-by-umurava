@@ -204,10 +204,6 @@ export default function ProfilePage() {
     closeModal();
   };
 
-  if (talentQuery.isLoading) {
-    return <div className="p-8 text-center">Loading profile...</div>;
-  }
-
   const completionPercentage = (() => {
     if (!talent) return 0;
     const fields = [
@@ -236,6 +232,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FD]">
+      <phantom-ui loading={talentQuery.isLoading}>
       <div className="mx-auto space-y-3">
         {/* HEADER SECTION - Beautiful & Clean */}
         <div className="bg-white rounded-[10px] p-6 sm:p-7 border border-gray-100 overflow-hidden relative">
@@ -493,6 +490,7 @@ export default function ProfilePage() {
           />
         </Modal>
       </div>
+      </phantom-ui>
     </div>
   );
 }
