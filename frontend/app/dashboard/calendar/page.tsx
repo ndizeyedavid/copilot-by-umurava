@@ -223,38 +223,6 @@ export default function CalendarPage() {
                     year: "numeric",
                   })}
                 </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setView("month")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      view === "month"
-                        ? "bg-blue-100 text-blue-600"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                  >
-                    <CalendarDays className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setView("week")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      view === "week"
-                        ? "bg-blue-100 text-blue-600"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                  >
-                    <Grid3X3 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => setView("day")}
-                    className={`p-2 rounded-lg transition-colors ${
-                      view === "day"
-                        ? "bg-blue-100 text-blue-600"
-                        : "text-gray-400 hover:text-gray-600"
-                    }`}
-                  >
-                    <List className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
 
               <div className="react-calendar-wrapper">

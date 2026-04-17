@@ -37,7 +37,13 @@ const upload = multer({
 
 export const resumeUpload = upload.single("resume");
 
-const REQUIRED_FIELDS = ["headline", "location", "skills", "experience", "availability"] as const;
+const REQUIRED_FIELDS = [
+  "headline",
+  "location",
+  "skills",
+  "experience",
+  "availability",
+] as const;
 
 function buildResumeParsingPrompt(resumeText: string, user: any): string {
   return `You are an expert resume parser. Extract structured information from the resume text.
@@ -90,7 +96,8 @@ const talentController = {
   async getMe(req: Request, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (!userId)
+        return res.status(401).json({ message: "Not authenticated" });
 
       let talent = await Talent.findOne({ userId }).populate(
         "userId",
@@ -116,21 +123,27 @@ const talentController = {
           "firstName lastName email picture phone",
         );
 
-        await User.findByIdAndUpdate(userId, { talentProfileId: newTalent._id.toString() });
+        await User.findByIdAndUpdate(userId, {
+          talentProfileId: newTalent._id.toString(),
+        });
       }
 
       return res.status(200).json({ message: "Talent profile found", talent });
     } catch (error: any) {
       return res
         .status(500)
-        .json({ message: "Failed to fetch talent profile", error: error.message });
+        .json({
+          message: "Failed to fetch talent profile",
+          error: error.message,
+        });
     }
   },
 
   async parseResume(req: Request, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (!userId)
+        return res.status(401).json({ message: "Not authenticated" });
 
       const file = req.file;
       if (!file) {
@@ -173,7 +186,9 @@ const talentController = {
       fs.unlinkSync(file.path);
 
       if (!text) {
-        return res.status(500).json({ message: "Failed to parse resume with AI" });
+        return res
+          .status(500)
+          .json({ message: "Failed to parse resume with AI" });
       }
 
       const parsedData = JSON.parse(text);
@@ -190,7 +205,10 @@ const talentController = {
         company: e.company || "",
         role: e.role || "",
         startDate: e.startDate ? new Date(e.startDate) : new Date(),
-        endDate: e.endDate && e.endDate !== "Present" ? new Date(e.endDate) : undefined,
+        endDate:
+          e.endDate && e.endDate !== "Present"
+            ? new Date(e.endDate)
+            : undefined,
         description: e.description || "",
         technologies: e.technologies || [],
         IsCurrent: e.endDate === "Present" || !e.endDate,
@@ -202,16 +220,20 @@ const talentController = {
         startYear: new Date(),
         endYear: new Date(),
       }));
-      talent.certifications = (parsedData.certifications || []).map((c: string) => ({
-        name: c,
-        issuer: "",
-        issueDate: new Date(),
-      }));
+      talent.certifications = (parsedData.certifications || []).map(
+        (c: string) => ({
+          name: c,
+          issuer: "",
+          issueDate: new Date(),
+        }),
+      );
       talent.rawCv = { text: resumeText, parsedAt: new Date() };
 
       await talent.save();
 
-      await User.findByIdAndUpdate(userId, { talentProfileId: talent._id.toString() });
+      await User.findByIdAndUpdate(userId, {
+        talentProfileId: talent._id.toString(),
+      });
 
       return res.status(200).json({
         message: "Resume parsed and profile updated",
@@ -232,7 +254,8 @@ const talentController = {
   async checkProfileCompletion(req: Request, res: Response) {
     try {
       const userId = (req as any).user?.userId;
-      if (!userId) return res.status(401).json({ message: "Not authenticated" });
+      if (!userId)
+        return res.status(401).json({ message: "Not authenticated" });
 
       const talent = await Talent.findOne({ userId });
 
@@ -248,8 +271,10 @@ const talentController = {
 
       if (!talent.headline?.trim()) missingFields.push("headline");
       if (!talent.location?.trim()) missingFields.push("location");
-      if (!talent.skills || talent.skills.length === 0) missingFields.push("skills");
-      if (!talent.experience || talent.experience.length === 0) missingFields.push("experience");
+      if (!talent.skills || talent.skills.length === 0)
+        missingFields.push("skills");
+      if (!talent.experience || talent.experience.length === 0)
+        missingFields.push("experience");
       if (!talent.availability?.status) missingFields.push("availability");
 
       const isComplete = missingFields.length === 0;
@@ -262,7 +287,10 @@ const talentController = {
     } catch (error: any) {
       return res
         .status(500)
-        .json({ message: "Failed to check profile completion", error: error.message });
+        .json({
+          message: "Failed to check profile completion",
+          error: error.message,
+        });
     }
   },
 
@@ -322,9 +350,29 @@ const talentController = {
   async updateTalent(req: Request, res: Response) {
     try {
       const { talentId } = req.params;
-      const payload: ITalent = req.body;
+      const payload: any = req.body;
 
-      const updatedTalent = await Talent.findByIdAndUpdate(talentId, payload);
+      // If payload contains userId updates, handle them separately
+      if (payload.userId) {
+        const talent = await Talent.findById(talentId);
+        if (talent && talent.userId) {
+          // Explicitly update user fields to ensure picture is included
+          const userUpdate: any = {};
+          if (payload.userId.firstName)
+            userUpdate.firstName = payload.userId.firstName;
+          if (payload.userId.lastName)
+            userUpdate.lastName = payload.userId.lastName;
+          if (payload.userId.picture)
+            userUpdate.picture = payload.userId.picture;
+
+          await User.findByIdAndUpdate(talent.userId, { $set: userUpdate });
+        }
+        delete payload.userId;
+      }
+
+      const updatedTalent = await Talent.findByIdAndUpdate(talentId, payload, {
+        new: true,
+      }).populate("userId", "firstName lastName email picture phone");
 
       if (!updatedTalent)
         return res.status(404).json({ message: "Talent Not Found" });

@@ -32,9 +32,12 @@ import { ImGithub, ImLinkedin2 } from "react-icons/im";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { updateProfile } from "@/lib/store/authSlice";
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const [activeModal, setActiveModal] = useState<{
     type:
       | "experience"
@@ -111,12 +114,40 @@ export default function ProfilePage() {
       const res = await api.put(`/talents/${talent._id}`, payload);
       return res.data;
     },
-    onSuccess: () => {
+    onMutate: async (newPayload) => {
+      // Optimistic update for Redux state if user details are present
+      if (newPayload.userId) {
+        dispatch(
+          updateProfile({
+            firstName: newPayload.userId.firstName,
+            lastName: newPayload.userId.lastName,
+            picture: newPayload.userId.picture,
+          }),
+        );
+      }
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["talent", "me"] });
       toast.success("Profile updated successfully");
+
+      // Update Redux state with definitive data from response
+      const talentResponse = data?.updatedTalent;
+      const userFromResponse = talentResponse?.userId;
+
+      if (userFromResponse) {
+        dispatch(
+          updateProfile({
+            firstName: userFromResponse.firstName,
+            lastName: userFromResponse.lastName,
+            picture: userFromResponse.picture,
+          }),
+        );
+      }
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || "Failed to update profile");
+      // Revert Redux state if needed (optional, could just invalidate and refetch)
+      queryClient.invalidateQueries({ queryKey: ["user", "me"] });
     },
   });
 
@@ -183,6 +214,11 @@ export default function ProfilePage() {
       headline: data.headline,
       location: data.location,
       socialLinks: data.socialLinks,
+      userId: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        picture: data.picture,
+      },
     });
     closeModal();
   };

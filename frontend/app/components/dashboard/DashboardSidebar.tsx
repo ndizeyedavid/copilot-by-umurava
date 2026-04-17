@@ -18,9 +18,10 @@ import {
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/lib/store/authSlice";
 import { useRouter } from "next/navigation";
+import { RootState } from "@/lib/store/store";
 
 type NavItem = {
   label: string;
@@ -119,13 +120,15 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
+  const { user: reduxUser } = useSelector((state: RootState) => state.auth);
 
-  const { data: user } = useQuery({
+  const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ["user", "me"],
     queryFn: async () => {
       const res = await api.get("/auth/me");
       return res.data?.user;
     },
+    enabled: !reduxUser,
   });
 
   const { data: talent } = useQuery({
@@ -160,34 +163,41 @@ export default function DashboardSidebar() {
     },
   ];
 
-  const displayName = user ? `${user.firstName} ${user.lastName || ""}`.trim() : "Loading...";
-  const userPicture = user?.picture || talent?.userId?.picture || "/images/companies/dummy.png";
+  const currentUser = reduxUser || user;
+  const displayName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName || ""}`.trim()
+    : "Loading...";
+  const userPicture =
+    currentUser?.picture ||
+    talent?.userId?.picture ||
+    "/images/companies/dummy.png";
   const userHeadline = talent?.headline || "Talent";
 
   return (
-   
     <aside className="sticky top-[72px] h-[calc(100vh-72px)] w-[240px] shrink-0 bg-white border-r border-gray-100">
       <div className="h-full px-5 py-12 flex flex-col">
         {/* User card */}
         <div className="flex items-center justify-between mb-8">
-           <phantom-ui loading={!user}>
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
-              <Image
-                src={userPicture}
-                alt="User avatar"
-                fill
-                className="object-cover"
-                sizes="40px"
-              />
+          <phantom-ui loading={!currentUser && userLoading}>
+            <div className="flex items-center gap-3">
+              <div className="relative h-10 w-10 overflow-hidden rounded-full bg-gray-100">
+                <Image
+                  src={userPicture}
+                  alt="User avatar"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold text-[#25324B]">
+                  {displayName}
+                </p>
+                <p className="text-xs text-[#7C8493] line-clamp-1">
+                  {userHeadline}
+                </p>
+              </div>
             </div>
-            <div className="leading-tight">
-              <p className="text-sm font-semibold text-[#25324B]">
-                {displayName}
-              </p>
-              <p className="text-xs text-[#7C8493] line-clamp-1">{userHeadline}</p>
-            </div>
-          </div>
           </phantom-ui>
         </div>
 
