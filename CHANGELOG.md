@@ -6,11 +6,25 @@ All notable changes made during admin dashboard refactor + auth improvements.
 
 ### Added
 
+- Talent Dashboard & Profile overhaul.
+  - Real-time profile data synchronization using Redux Toolkit across Sidebar, Header, and Profile.
+  - Interactive Profile Status navigation with smooth scroll to specific sections.
+  - CV management: Added support for viewing uploaded resumes in a new tab and replacing them with new uploads.
+  - Dynamic Job Application status tracking: Job cards now verify real-time status via API instead of hardcoded flags.
+  - Production-ready Settings page with active session management, Google linking, and password setup flows.
+  - Calendar system integration with real job/application dates and upcoming deadlines in the sidebar.
+
 - Automated job-application confirmation email system.
   - Integrated `nodemailer` for email dispatch.
   - Responsive HTML template matching project design system.
   - Background email processing to ensure main flow is not blocked.
   - Environment-based configuration (`ENABLE_EMAILS`) and robust error logging.
+
+### Fixed
+
+- Calendar layout misalignment in `calendar.css` by switching to CSS Grid.
+- Profile picture persistence bug: fixed backend controller to explicitly target the `User` model.
+- Uploadthing deprecation: updated all file URLs to use the latest `ufsUrl` API.
 
 ## 16 / 04 / 2026
 
