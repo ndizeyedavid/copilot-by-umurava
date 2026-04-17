@@ -59,7 +59,7 @@ Return ONLY valid JSON with this exact structure:
 
 export const uploadRouter = {
   cvUploader: f({
-    pdf: { maxFileSize: "1024KB", maxFileCount: 1 }
+    pdf: { maxFileSize: "1024MB", maxFileCount: 1 }
   })
     .middleware(async ({ req }) => {
       const authHeader = req.headers["authorization"];
