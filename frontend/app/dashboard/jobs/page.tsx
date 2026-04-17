@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import {
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import JobCard, { Job } from "./components/JobCard";
 import JobDetailsModal from "./components/JobDetailsModal";
@@ -140,77 +137,81 @@ export default function JobsPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-2">
       <phantom-ui loading={jobsQuery.isLoading}>
-      <div className="mx-auto space-y-6">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-[#25324B] tracking-tight">
-              Available Jobs
-            </h1>
-            <p className="text-lg font-semibold text-[#7C8493] mt-2">
-              Find your next big opportunity today
-            </p>
-          </div>
-        </div>
-
-        {/* Search & Filter Bar */}
-        <Card className="p-4 bg-white border border-gray-100 rounded-[10px] shadow-none">
-          <div className="flex flex-col lg:flex-row items-center gap-4">
-            <div className="relative flex-1 w-full group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#286ef0] transition-colors" />
-              <input
-                type="text"
-                placeholder="Search job titles, companies, or skills..."
-                className="w-full pl-14 pr-6 py-4 bg-[#F8F9FD] rounded-[10px] border-none outline-none focus:ring-2 focus:ring-[#286ef0] font-semibold text-[#25324B] transition-all"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-3 w-full lg:w-auto">
-              <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-5 py-3 bg-white border-2 border-gray-100 rounded-[10px] font-bold text-[#25324B] hover:border-[#286ef0] hover:text-[#286ef0] transition-all uppercase tracking-widest text-xs">
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters
-              </button>
-              <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-5 py-3 bg-[#286ef0] text-white rounded-[10px] font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-100 hover:bg-[#1f5fe0] transition-all">
-                Search
-              </button>
+        <div className="mx-auto space-y-6">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-black text-[#25324B] tracking-tight">
+                Available Jobs
+              </h1>
+              <p className="text-lg font-semibold text-[#7C8493] mt-2">
+                Find your next big opportunity today
+              </p>
             </div>
           </div>
-        </Card>
 
-        {/* Jobs Grid/List */}
-        <div
-          className={
-            viewType === "grid"
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-              : "grid grid-cols-1 lg:grid-cols-2 gap-4"
-          }
-        >
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map((job) => (
-              <JobCard key={job.id} job={job} onClick={handleJobClick} />
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center bg-white rounded-[10px] border border-dashed border-gray-200">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-10 h-10 text-gray-300" />
+          {/* Search & Filter Bar */}
+          <Card className="p-4 bg-white border border-gray-100 rounded-[10px] shadow-none">
+            <div className="flex flex-col lg:flex-row items-center gap-4">
+              <div className="relative flex-1 w-full group">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#286ef0] transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search job titles, companies, or skills..."
+                  className="w-full pl-14 pr-6 py-4 bg-[#F8F9FD] rounded-[10px] border-none outline-none focus:ring-2 focus:ring-[#286ef0] font-semibold text-[#25324B] transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-              <h3 className="text-2xl font-black text-[#25324B]">No jobs found</h3>
-              <p className="text-gray-500 mt-2">Try adjusting your search filters</p>
+              <div className="flex items-center gap-3 w-full lg:w-auto">
+                <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-5 py-3 bg-white border-2 border-gray-100 rounded-[10px] font-bold text-[#25324B] hover:border-[#286ef0] hover:text-[#286ef0] transition-all uppercase tracking-widest text-xs">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                </button>
+                <button className="flex-1 lg:flex-none flex items-center justify-center gap-3 px-5 py-3 bg-[#286ef0] text-white rounded-[10px] font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-100 hover:bg-[#1f5fe0] transition-all">
+                  Search
+                </button>
+              </div>
             </div>
+          </Card>
+
+          {/* Jobs Grid/List */}
+          <div
+            className={
+              viewType === "grid"
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                : "grid grid-cols-1 lg:grid-cols-2 gap-4"
+            }
+          >
+            {filteredJobs.length > 0 ? (
+              filteredJobs.map((job) => (
+                <JobCard key={job.id} job={job} onClick={handleJobClick} />
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center bg-white rounded-[10px] border border-dashed border-gray-200">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Search className="w-10 h-10 text-gray-300" />
+                </div>
+                <h3 className="text-2xl font-black text-[#25324B]">
+                  No jobs found
+                </h3>
+                <p className="text-gray-500 mt-2">
+                  Try adjusting your search filters
+                </p>
+              </div>
+            )}
+          </div>
+
+          {selectedJob && (
+            <JobDetailsModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              job={selectedJob}
+              onApply={handleApply}
+            />
           )}
         </div>
-
-        {selectedJob && (
-          <JobDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            job={selectedJob}
-            onApply={handleApply}
-          />
-        )}
-      </div>
-    </phantom-ui>
+      </phantom-ui>
     </div>
   );
 }
