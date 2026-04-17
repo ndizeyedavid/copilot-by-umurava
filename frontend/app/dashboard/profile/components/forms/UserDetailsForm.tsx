@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { UploadButton } from "@/lib/uploadthing";
 import { getCookie } from "cookies-next";
 import toast from "react-hot-toast";
@@ -27,6 +27,7 @@ export default function UserDetailsForm({
   const [pictureUrl, setPictureUrl] = useState(initialData.picture || "");
   const token = getCookie("accessToken");
   const queryClient = useQueryClient();
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -84,6 +85,14 @@ export default function UserDetailsForm({
                 queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                 queryClient.invalidateQueries({ queryKey: ["talent", "me"] });
                 toast.success("Profile picture uploaded!");
+
+                // Scroll to save button after a short delay to ensure UI updated
+                setTimeout(() => {
+                  submitButtonRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                }, 300);
               }
             }}
             onUploadError={(error: Error) => {
@@ -168,6 +177,7 @@ export default function UserDetailsForm({
         </div>
       </div>
       <button
+        ref={submitButtonRef}
         type="submit"
         className="w-full py-4 bg-[#286ef0] text-white rounded-[10px] font-bold uppercase tracking-widest text-sm hover:bg-[#1f5fe0] transition-all shadow-lg shadow-blue-100"
       >
