@@ -13,6 +13,7 @@ import { api } from "@/lib/api/client";
 import DashboardRightSidebar from "@/app/components/dashboard/DashboardRightSidebar";
 import DashboardStats from "@/app/components/dashboard/DashboardStats";
 import JobRecommendations from "@/app/components/dashboard/JobRecommendations";
+import "@aejkatappaja/phantom-ui";
 
 type StatCard = {
   label: string;
@@ -29,6 +30,8 @@ type BackendJob = {
   jobType: string;
   deadline: string;
   createdAt: string;
+  salary?: { amount: number; currency: string };
+  requirements?: string[];
 };
 
 type BackendApplication = {
@@ -114,17 +117,26 @@ export default function DashboardPage() {
         Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
       );
 
+      const hasApplied = applications.some((app) => app.jobId === j._id);
+
       return {
+        id: j._id,
         title: j.title,
-        company: "Umurava", // Default company name as it's not in the model yet
+        company: "Umurava",
         description: j.description,
-        location: "Rwanda", // Default location
-        type: j.jobType,
+        location: j.locationType === "remote" ? "Remote" : "Rwanda",
+        type: (j.jobType.charAt(0).toUpperCase() + j.jobType.slice(1)) as any,
         daysLeft,
         mode: j.locationType,
+        salary: j.salary
+          ? `${j.salary.currency} ${j.salary.amount.toLocaleString()}`
+          : "Competitive",
+        postedAt: new Date(j.createdAt).toLocaleDateString(),
+        tags: j.requirements || [],
+        status: hasApplied ? "Applied" : "Open",
       };
     });
-  }, [jobs]);
+  }, [jobs, applications]);
 
   const deadlines = useMemo(() => {
     return jobs
@@ -142,18 +154,18 @@ export default function DashboardPage() {
       }));
   }, [jobs]);
 
-  if (talentQuery.isLoading) {
-    return <div className="p-8 text-center">Loading dashboard...</div>;
-  }
 
   return (
-    <div className="grid grid-cols-[1fr_320px] gap-3">
-      <div className="space-y-8">
-        <DashboardStats stats={stats} />
-        <JobRecommendations jobs={recommendedJobs} />
-      </div>
+    <phantom-ui loading={jobsQuery.isLoading} animation="shimmer">
+      <div className="grid grid-cols-[1fr_320px] gap-3">
+        <div className="space-y-8">
+          <DashboardStats stats={stats} />
+          {/* @ts-ignore */}
+          <JobRecommendations jobs={recommendedJobs} />
+        </div>
 
-      <DashboardRightSidebar deadlines={deadlines} />
-    </div>
+        <DashboardRightSidebar deadlines={deadlines} />
+      </div>
+    </phantom-ui>
   );
 }
