@@ -20,7 +20,10 @@ interface UserDetailsFormProps {
   onSubmit: (data: any) => void;
 }
 
-export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFormProps) {
+export default function UserDetailsForm({
+  initialData,
+  onSubmit,
+}: UserDetailsFormProps) {
   const [pictureUrl, setPictureUrl] = useState(initialData.picture || "");
   const token = getCookie("accessToken");
   const queryClient = useQueryClient();
@@ -43,8 +46,10 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
     onSubmit(data);
   };
 
-  const linkedin = initialData.socialLinks.find(l => l.includes("linkedin")) || "";
-  const github = initialData.socialLinks.find(l => l.includes("github")) || "";
+  const linkedin =
+    initialData.socialLinks.find((l) => l.includes("linkedin")) || "";
+  const github =
+    initialData.socialLinks.find((l) => l.includes("github")) || "";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -74,8 +79,8 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
               Authorization: `Bearer ${token}`,
             }}
             onClientUploadComplete={(res) => {
-              if (res && res[0]?.url) {
-                setPictureUrl(res[0].url);
+              if (res && res[0]?.ufsUrl) {
+                setPictureUrl(res[0].ufsUrl);
                 queryClient.invalidateQueries({ queryKey: ["user", "me"] });
                 queryClient.invalidateQueries({ queryKey: ["talent", "me"] });
                 toast.success("Profile picture uploaded!");
@@ -87,7 +92,9 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
             className="ut-button:bg-[#286ef0] ut-button:text-white ut-button:rounded-full ut-button:px-4 ut-button:py-2 ut-button:text-sm ut-button:font-bold ut-button:hover:bg-[#1f5fe0] ut-button:transition-all ut-button:shadow-lg"
           />
         </div>
-        <p className="text-xs text-gray-400 mt-2">Click to upload a new picture</p>
+        <p className="text-xs text-gray-400 mt-2">
+          Click to upload a new picture
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -96,7 +103,7 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
           <input
             name="firstName"
             defaultValue={initialData.firstName}
-            className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+            className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
             required
           />
         </div>
@@ -105,7 +112,7 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
           <input
             name="lastName"
             defaultValue={initialData.lastName}
-            className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+            className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
             required
           />
         </div>
@@ -116,7 +123,7 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
           name="email"
           type="email"
           defaultValue={initialData.email}
-          className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+          className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
           required
         />
       </div>
@@ -125,7 +132,7 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
         <input
           name="headline"
           defaultValue={initialData.headline}
-          className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+          className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
           required
         />
       </div>
@@ -134,17 +141,19 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
         <input
           name="location"
           defaultValue={initialData.location}
-          className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+          className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
           required
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-bold text-[#25324B]">LinkedIn URL</label>
+          <label className="text-sm font-bold text-[#25324B]">
+            LinkedIn URL
+          </label>
           <input
             name="linkedin"
             defaultValue={linkedin}
-            className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+            className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
             placeholder="https://linkedin.com/in/username"
           />
         </div>
@@ -153,12 +162,15 @@ export default function UserDetailsForm({ initialData, onSubmit }: UserDetailsFo
           <input
             name="github"
             defaultValue={github}
-            className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
+            className="w-full p-4 bg-gray-50 outline-none rounded-xl border-none focus:ring-2 focus:ring-[#286ef0]"
             placeholder="https://github.com/username"
           />
         </div>
       </div>
-      <button type="submit" className="w-full py-4 bg-[#286ef0] text-white rounded-[10px] font-bold uppercase tracking-widest text-sm hover:bg-[#1f5fe0] transition-all shadow-lg shadow-blue-100">
+      <button
+        type="submit"
+        className="w-full py-4 bg-[#286ef0] text-white rounded-[10px] font-bold uppercase tracking-widest text-sm hover:bg-[#1f5fe0] transition-all shadow-lg shadow-blue-100"
+      >
         Save Profile Details
       </button>
     </form>

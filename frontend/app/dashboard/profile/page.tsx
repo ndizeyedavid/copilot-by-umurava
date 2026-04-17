@@ -111,6 +111,7 @@ export default function ProfilePage() {
 
   const updateTalentMutation = useMutation({
     mutationFn: async (payload: any) => {
+      console.log(payload);
       const res = await api.put(`/talents/${talent._id}`, payload);
       return res.data;
     },
@@ -142,6 +143,7 @@ export default function ProfilePage() {
             picture: userFromResponse.picture,
           }),
         );
+        window.location.reload();
       }
     },
     onError: (error: any) => {
@@ -300,7 +302,7 @@ export default function ProfilePage() {
       },
     ],
     hasCv: !!talent?.rawCv,
-    cvUrl: talent?.rawCv?.url || talent?.resumeUrl,
+    cvUrl: talent?.rawCv?.ufsUrl || talent?.resumeUrl,
   };
 
   return (

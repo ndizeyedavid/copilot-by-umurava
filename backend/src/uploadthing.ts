@@ -59,7 +59,7 @@ Return ONLY valid JSON with this exact structure:
 
 export const uploadRouter = {
   cvUploader: f({
-    pdf: { maxFileSize: "1024MB", maxFileCount: 1 }
+    pdf: { maxFileSize: "1024MB", maxFileCount: 1 },
   })
     .middleware(async ({ req }) => {
       const authHeader = req.headers["authorization"];
@@ -69,7 +69,8 @@ export const uploadRouter = {
 
       try {
         const user = verifyToken(token);
-        if (!user || user.role !== "talent") throw new Error("Unauthorized: Invalid role");
+        if (!user || user.role !== "talent")
+          throw new Error("Unauthorized: Invalid role");
         return { userId: user.userId };
       } catch (error: any) {
         throw new Error(`Unauthorized: ${error.message}`);
@@ -77,7 +78,7 @@ export const uploadRouter = {
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);
-      console.log("File URL:", file.url);
+      console.log("File URL:", file.ufsUrl);
 
       try {
         const user = await User.findById(metadata.userId);
@@ -101,11 +102,15 @@ export const uploadRouter = {
         }
 
         // Fetch file content for parsing if it's a PDF
-        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+        const isPdf =
+          file.type === "application/pdf" ||
+          file.name.toLowerCase().endsWith(".pdf");
 
         if (isPdf) {
           try {
-            const response = await axios.get(file.url, { responseType: "arraybuffer" });
+            const response = await axios.get(file.ufsUrl, {
+              responseType: "arraybuffer",
+            });
             const pdfBuffer = Buffer.from(response.data);
             const parsed = await pdfParse(pdfBuffer);
             const resumeText = parsed.text;
@@ -127,9 +132,11 @@ export const uploadRouter = {
                 try {
                   const parsedData = JSON.parse(text);
 
-                  talent.headline = parsedData.headline || talent.headline || "";
+                  talent.headline =
+                    parsedData.headline || talent.headline || "";
                   talent.bio = parsedData.summary || talent.bio || "";
-                  talent.location = parsedData.location || talent.location || "";
+                  talent.location =
+                    parsedData.location || talent.location || "";
 
                   if (parsedData.skills && Array.isArray(parsedData.skills)) {
                     talent.skills = parsedData.skills.map((s: string) => ({
@@ -139,19 +146,30 @@ export const uploadRouter = {
                     }));
                   }
 
-                  if (parsedData.experience && Array.isArray(parsedData.experience)) {
+                  if (
+                    parsedData.experience &&
+                    Array.isArray(parsedData.experience)
+                  ) {
                     talent.experience = parsedData.experience.map((e: any) => ({
                       company: e.company || "",
                       role: e.role || "",
-                      startDate: e.startDate ? new Date(e.startDate) : new Date(),
-                      endDate: e.endDate && e.endDate !== "Present" ? new Date(e.endDate) : undefined,
+                      startDate: e.startDate
+                        ? new Date(e.startDate)
+                        : new Date(),
+                      endDate:
+                        e.endDate && e.endDate !== "Present"
+                          ? new Date(e.endDate)
+                          : undefined,
                       description: e.description || "",
                       technologies: e.technologies || [],
                       IsCurrent: e.endDate === "Present" || !e.endDate,
                     }));
                   }
 
-                  if (parsedData.education && Array.isArray(parsedData.education)) {
+                  if (
+                    parsedData.education &&
+                    Array.isArray(parsedData.education)
+                  ) {
                     talent.education = parsedData.education.map((e: any) => ({
                       institution: e.institution || "",
                       degree: e.degree || "",
@@ -161,12 +179,17 @@ export const uploadRouter = {
                     }));
                   }
 
-                  if (parsedData.certifications && Array.isArray(parsedData.certifications)) {
-                    talent.certifications = parsedData.certifications.map((c: string) => ({
-                      name: c,
-                      issuer: "",
-                      issueDate: new Date(),
-                    }));
+                  if (
+                    parsedData.certifications &&
+                    Array.isArray(parsedData.certifications)
+                  ) {
+                    talent.certifications = parsedData.certifications.map(
+                      (c: string) => ({
+                        name: c,
+                        issuer: "",
+                        issueDate: new Date(),
+                      }),
+                    );
                   }
 
                   talent.rawCv = { text: resumeText, parsedAt: new Date() };
@@ -180,18 +203,17 @@ export const uploadRouter = {
           }
         }
 
-        talent.cvUrl = file.url;
+        talent.cvUrl = file.ufsUrl;
         await talent.save();
 
         await User.findByIdAndUpdate(metadata.userId, {
           talentProfileId: talent._id,
         });
-
       } catch (error) {
         console.error("Failed to process uploaded CV:", error);
       }
 
-      return { uploadedBy: metadata.userId, url: file.url };
+      return { uploadedBy: metadata.userId, url: file.ufsUrl };
     }),
 
   profilePictureUploader: f({
@@ -205,27 +227,30 @@ export const uploadRouter = {
 
       try {
         const user = verifyToken(token);
-        if (!user || user.role !== "talent") throw new Error("Unauthorized: Invalid role");
+        if (!user || user.role !== "talent")
+          throw new Error("Unauthorized: Invalid role");
         return { userId: user.userId };
       } catch (error: any) {
         throw new Error(`Unauthorized: ${error.message}`);
       }
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Profile picture upload complete for userId:", metadata.userId);
-      console.log("File URL:", file.url);
+      console.log(
+        "Profile picture upload complete for userId:",
+        metadata.userId,
+      );
+      console.log("File URL:", file.ufsUrl);
 
       try {
         await User.findByIdAndUpdate(metadata.userId, {
-          picture: file.url,
+          picture: file.ufsUrl,
         });
       } catch (error) {
         console.error("Failed to update user profile picture:", error);
       }
 
-      return { uploadedBy: metadata.userId, url: file.url };
+      return { uploadedBy: metadata.userId, url: file.ufsUrl };
     }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof uploadRouter;
-
