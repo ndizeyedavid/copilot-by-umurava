@@ -6,7 +6,7 @@ const talentSchema = new Schema<ITalent>(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     headline: { type: String, required: true },
     bio: { type: String },
-    location: { type: String, required: true },
+    location: { type: String, },
     skills: [
       {
         name: { type: String, required: true },

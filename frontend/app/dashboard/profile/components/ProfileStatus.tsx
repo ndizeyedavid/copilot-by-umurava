@@ -21,8 +21,20 @@ const StatusItem = ({ label, isCompleted, isRequired }: StatusItemProps) => (
   </div>
 );
 
-export default function ProfileStatus() {
-  const percentage = 87;
+interface ProfileStatusProps {
+  progress: {
+    percentage: number;
+    items: {
+      label: string;
+      isCompleted: boolean;
+      isRequired?: boolean;
+    }[];
+    hasCv: boolean;
+  };
+}
+
+export default function ProfileStatus({ progress }: ProfileStatusProps) {
+  const { percentage, items, hasCv } = progress;
 
   return (
     <div className="bg-white rounded-[10px] overflow-hidden shadow-none border border-gray-100">
@@ -39,28 +51,15 @@ export default function ProfileStatus() {
 
         <div className="flex justify-between items-start mb-6">
           <div className="space-y-1">
-            <StatusItem
-              label="Education"
-              isCompleted={true}
-              isRequired={true}
-            />
-            <StatusItem
-              label="Languages"
-              isCompleted={true}
-              isRequired={true}
-            />
-            <StatusItem
-              label="Disability"
-              isCompleted={false}
-              isRequired={true}
-            />
-            <StatusItem
-              label="Upload CV"
-              isCompleted={true}
-              isRequired={true}
-            />
-            <StatusItem label="Experience" isCompleted={false} />
-            <StatusItem label="Certificates" isCompleted={true} />
+            {items.map((item, index) => (
+              <StatusItem
+                key={index}
+                label={item.label}
+                isCompleted={item.isCompleted}
+                isRequired={item.isRequired}
+              />
+            ))}
+            <StatusItem label="Upload CV" isCompleted={hasCv} isRequired={true} />
           </div>
 
           <div className="relative w-24 h-24 flex items-center justify-center">
@@ -92,17 +91,19 @@ export default function ProfileStatus() {
           </div>
         </div>
 
-        <button className="w-full bg-[#f8f9fa] cursor-pointer hover:bg-gray-100 border border-gray-200 rounded-2xl p-4 transition-colors flex items-center gap-4">
-          <div className="bg-white p-2 rounded-lg shadow-sm">
-            <FileText className="w-6 h-6 text-[#d93025]" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-bold text-[#25324B]">View uploaded CV</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              PDF
-            </p>
-          </div>
-        </button>
+        {hasCv && (
+          <button className="w-full bg-[#f8f9fa] cursor-pointer hover:bg-gray-100 border border-gray-200 rounded-2xl p-4 transition-colors flex items-center gap-4">
+            <div className="bg-white p-2 rounded-lg shadow-sm">
+              <FileText className="w-6 h-6 text-[#d93025]" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-bold text-[#25324B]">View uploaded CV</p>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                PDF
+              </p>
+            </div>
+          </button>
+        )}
       </div>
     </div>
   );

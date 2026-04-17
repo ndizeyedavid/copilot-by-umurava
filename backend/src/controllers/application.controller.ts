@@ -56,7 +56,7 @@ const applicationController = {
   async getByTalentId(req: Request, res: Response) {
     try {
       const { talentId } = req.params;
-      const applications = await Application.find({ talentId });
+      const applications = await Application.find({ talentId }).populate("jobId");
 
       return res.status(200).json({
         message: `${applications.length} application(s) by talent`,

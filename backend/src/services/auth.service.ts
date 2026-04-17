@@ -79,7 +79,7 @@ export function generateTokens(user: IUser) {
     role: user.role,
   };
 
-  const expiresIn = user.role === "admin" ? "24h" : (ENV.jwt_expires_in as any);
+  const expiresIn = "24h";
 
   const accessToken = jwt.sign(payload, ENV.jwt_secret, {
     expiresIn: expiresIn as jwt.SignOptions["expiresIn"],

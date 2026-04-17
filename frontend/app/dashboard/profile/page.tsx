@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  User,
   MapPin,
   Edit3,
   Globe,
@@ -10,6 +9,7 @@ import {
   CheckCircle,
   Camera,
   Plus,
+  User,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -25,8 +25,12 @@ import BioForm from "./components/forms/BioForm";
 import UserDetailsForm from "./components/forms/UserDetailsForm";
 import SocialsForm from "./components/forms/SocialsForm";
 import { ImGithub, ImLinkedin2 } from "react-icons/im";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/api/client";
+import toast from "react-hot-toast";
 
 export default function ProfilePage() {
+  const queryClient = useQueryClient();
   const [activeModal, setActiveModal] = useState<{
     type:
       | "experience"
@@ -39,71 +43,71 @@ export default function ProfilePage() {
     index?: number;
   }>({ type: null });
 
-  // Reflected from Talents & Users Schema
+  const talentQuery = useQuery({
+    queryKey: ["talent", "me"],
+    queryFn: async () => {
+      const res = await api.get("/talents/me");
+      return res.data?.talent;
+    },
+  });
+
+  const talent = talentQuery.data;
+
+  // Local state for UI updates before mutation completes (optional, but good for UX)
   const [userData, setUserData] = useState({
-    firstName: "Ndizeye",
-    lastName: "David",
-    email: "david@umurava.com",
-    picture: null,
+    firstName: "",
+    lastName: "",
+    email: "",
+    picture: null as string | null,
   });
 
   const [talentData, setTalentData] = useState({
-    headline: "Frontend Developer - React & AI Systems",
-    bio: "Passionate about building scalable web applications with high-quality UI/UX and integrating AI solutions.",
-    location: "Kigali, Rwanda",
-    skills: [
-      {
-        name: "React",
-        level: "Expert" as Skill["level"],
-        yearsOfExperience: 3,
-      },
-      {
-        name: "TypeScript",
-        level: "Advanced" as Skill["level"],
-        yearsOfExperience: 2,
-      },
-      {
-        name: "Node.js",
-        level: "Intermediate" as Skill["level"],
-        yearsOfExperience: 2,
-      },
-      {
-        name: "Tailwind CSS",
-        level: "Expert" as Skill["level"],
-        yearsOfExperience: 3,
-      },
-    ],
-    experience: [
-      {
-        company: "TechCorp Rwanda",
-        role: "Senior Frontend Engineer",
-        startDate: "2022-01-01",
-        endDate: "" as string,
-        description:
-          "Led the development of a next-gen dashboard for talent analytics, improving performance by 60%.",
-        technologies: ["Next.js", "Tailwind", "Radix UI"],
-        IsCurrent: true,
-      },
-      {
-        company: "Umurava",
-        role: "Frontend Developer",
-        startDate: "2021-06-01",
-        endDate: "2021-12-31",
-        description:
-          "Collaborated on building the landing pages and talent marketplace platform using React.",
-        technologies: ["React", "Redux", "SCSS"],
-        IsCurrent: false,
-      },
-    ],
+    headline: "",
+    bio: "",
+    location: "",
+    skills: [] as Skill[],
+    experience: [] as Experience[],
     availability: {
       status: "Available" as const,
       type: "Full-time" as const,
     },
-    socialLinks: ["https://linkedin.com/in/david", "https://github.com/david"],
-    languages: [
-      { name: "English", proficiency: "Fluent" as Language["proficiency"] },
-      { name: "Kinyarwanda", proficiency: "Native" as Language["proficiency"] },
-    ],
+    socialLinks: [] as string[],
+    languages: [] as Language[],
+  });
+
+  useEffect(() => {
+    if (talent) {
+      setUserData({
+        firstName: talent.userId?.firstName || "",
+        lastName: talent.userId?.lastName || "",
+        email: talent.userId?.email || "",
+        picture: talent.userId?.picture || null,
+      });
+      setTalentData({
+        headline: talent.headline || "",
+        bio: talent.bio || "",
+        location: talent.location || "",
+        skills: talent.skills || [],
+        experience: talent.experience || [],
+        availability: talent.availability || { status: "Available", type: "Full-time" },
+        socialLinks: talent.socialLinks || [],
+        languages: talent.languages || [],
+      });
+    }
+  }, [talent]);
+
+  const updateTalentMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.put(`/talents/${talent._id}`, payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["talent", "me"] });
+      toast.success("Profile updated successfully");
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Failed to update profile");
+    },
   });
 
   // Modal Handlers
@@ -117,16 +121,12 @@ export default function ProfilePage() {
 
   const handleUpdateExperience = (updatedExp: Experience) => {
     const newExperience = [...talentData.experience];
-    const formattedExp = {
-      ...updatedExp,
-      endDate: updatedExp.endDate || "", // Ensure string
-    };
     if (activeModal.index !== undefined) {
-      newExperience[activeModal.index] = formattedExp;
+      newExperience[activeModal.index] = updatedExp;
     } else {
-      newExperience.push(formattedExp);
+      newExperience.push(updatedExp);
     }
-    setTalentData({ ...talentData, experience: newExperience });
+    updateTalentMutation.mutate({ experience: newExperience });
     closeModal();
   };
 
@@ -137,7 +137,7 @@ export default function ProfilePage() {
     } else {
       newSkills.push(updatedSkill);
     }
-    setTalentData({ ...talentData, skills: newSkills });
+    updateTalentMutation.mutate({ skills: newSkills });
     closeModal();
   };
 
@@ -148,24 +148,17 @@ export default function ProfilePage() {
     } else {
       newLanguages.push(updatedLang);
     }
-    setTalentData({ ...talentData, languages: newLanguages });
+    updateTalentMutation.mutate({ languages: newLanguages });
     closeModal();
   };
 
   const handleUpdateBio = (newBio: string) => {
-    setTalentData({ ...talentData, bio: newBio });
+    updateTalentMutation.mutate({ bio: newBio });
     closeModal();
   };
 
   const handleUpdateDetails = (data: any) => {
-    setUserData({
-      ...userData,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-    });
-    setTalentData({
-      ...talentData,
+    updateTalentMutation.mutate({
       headline: data.headline,
       location: data.location,
       socialLinks: data.socialLinks,
@@ -174,22 +167,52 @@ export default function ProfilePage() {
   };
 
   const handleUpdateSocials = (data: any) => {
-    setTalentData({ ...talentData, socialLinks: data.socialLinks });
+    updateTalentMutation.mutate({ socialLinks: data.socialLinks });
     closeModal();
   };
 
   const removeItem = (type: typeof activeModal.type, index: number) => {
     if (type === "experience") {
       const newExp = talentData.experience.filter((_, i) => i !== index);
-      setTalentData({ ...talentData, experience: newExp });
+      updateTalentMutation.mutate({ experience: newExp });
     } else if (type === "skills") {
       const newSkills = talentData.skills.filter((_, i) => i !== index);
-      setTalentData({ ...talentData, skills: newSkills });
+      updateTalentMutation.mutate({ skills: newSkills });
     } else if (type === "languages") {
       const newLangs = talentData.languages.filter((_, i) => i !== index);
-      setTalentData({ ...talentData, languages: newLangs });
+      updateTalentMutation.mutate({ languages: newLangs });
     }
     closeModal();
+  };
+
+  if (talentQuery.isLoading) {
+    return <div className="p-8 text-center">Loading profile...</div>;
+  }
+
+  const completionPercentage = (() => {
+    if (!talent) return 0;
+    const fields = [
+      talent.headline,
+      talent.location,
+      talent.bio,
+      talent.skills?.length > 0,
+      talent.experience?.length > 0,
+      talent.languages?.length > 0,
+    ];
+    const completed = fields.filter(Boolean).length;
+    return Math.round((completed / fields.length) * 100);
+  })();
+
+  const profileProgress = {
+    percentage: completionPercentage,
+    items: [
+      { label: "Headline", isCompleted: !!talent?.headline, isRequired: true },
+      { label: "Location", isCompleted: !!talent?.location, isRequired: true },
+      { label: "Skills", isCompleted: talent?.skills?.length > 0, isRequired: true },
+      { label: "Experience", isCompleted: talent?.experience?.length > 0, isRequired: true },
+      { label: "Languages", isCompleted: talent?.languages?.length > 0, isRequired: false },
+    ],
+    hasCv: !!talent?.rawCv,
   };
 
   return (
@@ -307,7 +330,7 @@ export default function ProfilePage() {
 
           {/* Sidebar - Profile Status (The MIFOTRA-style card) */}
           <div className="lg:col-span-1 space-y-8 sticky top-[100px]">
-            <ProfileStatus />
+            <ProfileStatus progress={profileProgress} />
           </div>
         </div>
 
