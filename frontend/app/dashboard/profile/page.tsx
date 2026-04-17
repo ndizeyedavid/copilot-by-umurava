@@ -16,7 +16,9 @@ import { Badge } from "@/components/ui/Badge";
 import ExperienceSection, { Experience } from "./components/ExperienceSection";
 import SkillsSection, { Skill } from "./components/SkillsSection";
 import LanguagesSection, { Language } from "./components/LanguagesSection";
-import CertificatesSection, { Certificate } from "./components/CertificatesSection";
+import CertificatesSection, {
+  Certificate,
+} from "./components/CertificatesSection";
 import ProfileStatus from "./components/ProfileStatus";
 import Modal from "./components/Modal";
 import ExperienceForm from "./components/forms/ExperienceForm";
@@ -93,7 +95,10 @@ export default function ProfilePage() {
         location: talent.location || "",
         skills: talent.skills || [],
         experience: talent.experience || [],
-        availability: talent.availability || { status: "Available", type: "Full-time" },
+        availability: talent.availability || {
+          status: "Available",
+          type: "Full-time",
+        },
         socialLinks: talent.socialLinks || [],
         languages: talent.languages || [],
         certifications: talent.certifications || [],
@@ -221,275 +226,322 @@ export default function ProfilePage() {
   const profileProgress = {
     percentage: completionPercentage,
     items: [
-      { label: "Headline", isCompleted: !!talent?.headline, isRequired: true },
-      { label: "Location", isCompleted: !!talent?.location, isRequired: true },
-      { label: "Skills", isCompleted: talent?.skills?.length > 0, isRequired: true },
-      { label: "Experience", isCompleted: talent?.experience?.length > 0, isRequired: true },
-      { label: "Languages", isCompleted: talent?.languages?.length > 0, isRequired: false },
+      {
+        label: "Headline",
+        isCompleted: !!talent?.headline,
+        isRequired: true,
+        targetId: "profile-details",
+      },
+      {
+        label: "Location",
+        isCompleted: !!talent?.location,
+        isRequired: true,
+        targetId: "profile-details",
+      },
+      {
+        label: "Personal Bio",
+        isCompleted: !!talent?.bio,
+        isRequired: true,
+        targetId: "bio",
+      },
+      {
+        label: "Skills",
+        isCompleted: talent?.skills?.length > 0,
+        isRequired: true,
+        targetId: "skills",
+      },
+      {
+        label: "Experience",
+        isCompleted: talent?.experience?.length > 0,
+        isRequired: true,
+        targetId: "experience",
+      },
+      {
+        label: "Languages",
+        isCompleted: talent?.languages?.length > 0,
+        isRequired: false,
+        targetId: "languages",
+      },
     ],
     hasCv: !!talent?.rawCv,
+    cvUrl: talent?.rawCv?.url || talent?.resumeUrl,
   };
 
   return (
     <div className="min-h-screen bg-[#F8F9FD]">
       <phantom-ui loading={talentQuery.isLoading}>
-      <div className="mx-auto space-y-3">
-        {/* HEADER SECTION - Beautiful & Clean */}
-        <div className="bg-white rounded-[10px] p-6 sm:p-7 border border-gray-100 overflow-hidden relative">
-          <div className="flex  flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
-              {/* Profile Picture */}
-              <div className="relative group">
-                <div className="w-32 h-32 sm:w-32 sm:h-32 rounded-full bg-linear-to-tr from-[#286ef0] to-[#5c95ff] p-1 ">
-                  {userData.picture ? (
-                    <div className="w-full h-full rounded-full bg-white overflow-hidden border-4 border-white">
-                      <img
-                        src={userData.picture}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center border-4 border-white">
-                      <span className="text-4xl sm:text-5xl font-bold text-[#286ef0]">
-                        {userData.firstName[0]}{userData.lastName[0]}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="text-center sm:text-left pt-2">
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-                  <h1 className="text-3xl sm:text-3xl font-extrabold text-[#25324B]">
-                    {userData.firstName} {userData.lastName}
-                  </h1>
-                </div>
-                <p className="text-lg font-semibold text-[#7C8493] mb-4 max-w-xl">
-                  {talentData.headline}
-                </p>
-
-                <div className="flex flex-wrap justify-center sm:justify-start gap-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#444]">
-                    <div className="">
-                      <MapPin className="w-4 h-4 text-[#286ef0]" />
-                    </div>
-                    {talentData.location}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#444]">
-                    <div className=" ">
-                      <Mail className="w-4 h-4 text-[#286ef0]" />
-                    </div>
-                    {userData.email}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => openModal("details")}
-                className="w-full px-8 py-4 bg-[#286ef0] text-white rounded-[10px] hover:bg-[#1f5fe0] shadow-[0_4px_15px_rgba(40,110,240,0.3)] transition-all flex items-center justify-center font-bold text-sm tracking-widest uppercase"
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Edit Profile
-              </button>
-              <div className="flex justify-center gap-2">
-                {talentData.socialLinks.map((link, i) => (
-                  <a
-                    key={i}
-                    href={link}
-                    className="p-3 bg-gray-50 rounded-xl text-gray-400 hover:text-[#286ef0] hover:bg-[#F3F4FF] transition-all"
-                  >
-                    {link.includes("github") ? (
-                      <ImGithub className="w-5 h-5" />
+        <div className="mx-auto space-y-3">
+          {/* HEADER SECTION - Beautiful & Clean */}
+          <div
+            id="profile-details"
+            className="bg-white rounded-[10px] p-6 sm:p-7 border border-gray-100 overflow-hidden relative"
+          >
+            <div className="flex  flex-col lg:flex-row items-center justify-between gap-8 relative z-10">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8">
+                {/* Profile Picture */}
+                <div className="relative group">
+                  <div className="w-32 h-32 sm:w-32 sm:h-32 rounded-full bg-linear-to-tr from-[#286ef0] to-[#5c95ff] p-1 ">
+                    {userData.picture ? (
+                      <div className="w-full h-full rounded-full bg-white overflow-hidden border-4 border-white">
+                        <img
+                          src={userData.picture}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ) : (
-                      <ImLinkedin2 className="w-5 h-5" />
+                      <div className="w-full h-full rounded-full bg-white overflow-hidden flex items-center justify-center border-4 border-white">
+                        <span className="text-4xl sm:text-5xl font-bold text-[#286ef0]">
+                          {userData.firstName[0]}
+                          {userData.lastName[0]}
+                        </span>
+                      </div>
                     )}
-                  </a>
-                ))}
+                  </div>
+                </div>
+
+                <div className="text-center sm:text-left pt-2">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                    <h1 className="text-3xl sm:text-3xl font-extrabold text-[#25324B]">
+                      {userData.firstName} {userData.lastName}
+                    </h1>
+                  </div>
+                  <p className="text-lg font-semibold text-[#7C8493] mb-4 max-w-xl">
+                    {talentData.headline}
+                  </p>
+
+                  <div className="flex flex-wrap justify-center sm:justify-start gap-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-[#444]">
+                      <div className="">
+                        <MapPin className="w-4 h-4 text-[#286ef0]" />
+                      </div>
+                      {talentData.location}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm font-medium text-[#444]">
+                      <div className=" ">
+                        <Mail className="w-4 h-4 text-[#286ef0]" />
+                      </div>
+                      {userData.email}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => openModal("details")}
+                  className="w-full px-8 py-4 bg-[#286ef0] text-white rounded-[10px] hover:bg-[#1f5fe0] shadow-[0_4px_15px_rgba(40,110,240,0.3)] transition-all flex items-center justify-center font-bold text-sm tracking-widest uppercase"
+                >
+                  <Edit3 className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </button>
+                <div className="flex justify-center gap-2">
+                  {talentData.socialLinks.map((link, i) => (
+                    <a
+                      key={i}
+                      href={link}
+                      className="p-3 bg-gray-50 rounded-xl text-gray-400 hover:text-[#286ef0] hover:bg-[#F3F4FF] transition-all"
+                    >
+                      {link.includes("github") ? (
+                        <ImGithub className="w-5 h-5" />
+                      ) : (
+                        <ImLinkedin2 className="w-5 h-5" />
+                      )}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
-          {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-3">
-            {/* Bio Section */}
-            <Card
-              className="p-8 bg-white rounded-[10px] border border-gray-100 shadow-none cursor-pointer group hover:border-[#286ef0] transition-all"
-              onClick={() => openModal("bio")}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-[#25324B] flex items-center gap-3">
-                  <User className="w-5 h-5 text-[#286ef0]" />
-                  Personal Bio
-                </h2>
-                <Edit3 className="w-4 h-4 text-gray-300 group-hover:text-[#286ef0] transition-colors" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {/* Main Content Area */}
+            <div className="lg:col-span-2 space-y-3">
+              {/* Bio Section */}
+              <Card
+                id="bio"
+                className="p-8 bg-white rounded-[10px] border border-gray-100 shadow-none cursor-pointer group hover:border-[#286ef0] transition-all"
+                onClick={() => openModal("bio")}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-[#25324B] flex items-center gap-3">
+                    <User className="w-5 h-5 text-[#286ef0]" />
+                    Personal Bio
+                  </h2>
+                  <Edit3 className="w-4 h-4 text-gray-300 group-hover:text-[#286ef0] transition-colors" />
+                </div>
+                <p className="text-sm leading-relaxed text-[#7C8493] font-medium">
+                  {talentData.bio}
+                </p>
+              </Card>
+
+              <div id="experience">
+                <ExperienceSection
+                  experience={talentData.experience as Experience[]}
+                  onAdd={() => openModal("experience")}
+                  onEdit={(index) => openModal("experience", index)}
+                />
               </div>
-              <p className="text-sm leading-relaxed text-[#7C8493] font-medium">
-                {talentData.bio}
-              </p>
-            </Card>
 
-            <ExperienceSection
-              experience={talentData.experience as Experience[]}
-              onAdd={() => openModal("experience")}
-              onEdit={(index) => openModal("experience", index)}
-            />
+              <div id="skills">
+                <SkillsSection
+                  skills={talentData.skills as Skill[]}
+                  onAdd={() => openModal("skills")}
+                  onEdit={(index) => openModal("skills", index)}
+                />
+              </div>
 
-            <SkillsSection
-              skills={talentData.skills as Skill[]}
-              onAdd={() => openModal("skills")}
-              onEdit={(index) => openModal("skills", index)}
-            />
+              <div id="languages">
+                <LanguagesSection
+                  languages={talentData.languages as Language[]}
+                  onAdd={() => openModal("languages")}
+                  onEdit={(index) => openModal("languages", index)}
+                  onRemove={(index) => removeItem("languages", index)}
+                />
+              </div>
 
-            <LanguagesSection
-              languages={talentData.languages as Language[]}
-              onAdd={() => openModal("languages")}
-              onEdit={(index) => openModal("languages", index)}
-              onRemove={(index) => removeItem("languages", index)}
-            />
+              <div id="certificates">
+                <CertificatesSection
+                  certificates={talentData.certifications as Certificate[]}
+                  onAdd={() => openModal("certificates")}
+                  onEdit={(index) => openModal("certificates", index)}
+                />
+              </div>
+            </div>
 
-            <CertificatesSection
-              certificates={talentData.certifications as Certificate[]}
-              onAdd={() => openModal("certificates")}
-              onEdit={(index) => openModal("certificates", index)}
-            />
+            {/* Sidebar - Profile Status (The MIFOTRA-style card) */}
+            <div className="lg:col-span-1 space-y-8 sticky top-[100px]">
+              <ProfileStatus progress={profileProgress} />
+            </div>
           </div>
 
-          {/* Sidebar - Profile Status (The MIFOTRA-style card) */}
-          <div className="lg:col-span-1 space-y-8 sticky top-[100px]">
-            <ProfileStatus progress={profileProgress} />
-          </div>
+          {/* MODALS */}
+          <Modal
+            isOpen={activeModal.type === "experience"}
+            onClose={closeModal}
+            title={
+              activeModal.index !== undefined
+                ? "Edit Experience"
+                : "Add Experience"
+            }
+          >
+            <ExperienceForm
+              initialData={
+                activeModal.index !== undefined
+                  ? talentData.experience[activeModal.index]
+                  : undefined
+              }
+              onSubmit={handleUpdateExperience}
+              onDelete={
+                activeModal.index !== undefined
+                  ? () => removeItem("experience", activeModal.index!)
+                  : undefined
+              }
+            />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "skills"}
+            onClose={closeModal}
+            title={activeModal.index !== undefined ? "Edit Skill" : "Add Skill"}
+          >
+            <SkillForm
+              initialData={
+                activeModal.index !== undefined
+                  ? talentData.skills[activeModal.index]
+                  : undefined
+              }
+              onSubmit={handleUpdateSkill}
+              onDelete={
+                activeModal.index !== undefined
+                  ? () => removeItem("skills", activeModal.index!)
+                  : undefined
+              }
+            />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "languages"}
+            onClose={closeModal}
+            title={
+              activeModal.index !== undefined ? "Edit Language" : "Add Language"
+            }
+          >
+            <LanguageForm
+              initialData={
+                activeModal.index !== undefined
+                  ? talentData.languages[activeModal.index]
+                  : undefined
+              }
+              onSubmit={handleUpdateLanguage}
+              onDelete={
+                activeModal.index !== undefined
+                  ? () => removeItem("languages", activeModal.index!)
+                  : undefined
+              }
+            />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "certificates"}
+            onClose={closeModal}
+            title={
+              activeModal.index !== undefined
+                ? "Edit Certificate"
+                : "Add Certificate"
+            }
+          >
+            <CertificateForm
+              initialData={
+                activeModal.index !== undefined
+                  ? talentData.certifications[activeModal.index]
+                  : undefined
+              }
+              onSubmit={handleUpdateCertificate}
+              onCancel={closeModal}
+            />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "bio"}
+            onClose={closeModal}
+            title="Edit Personal Bio"
+          >
+            <BioForm initialData={talentData.bio} onSubmit={handleUpdateBio} />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "details"}
+            onClose={closeModal}
+            title="Edit Profile Details"
+          >
+            <UserDetailsForm
+              initialData={{
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                email: userData.email,
+                headline: talentData.headline,
+                location: talentData.location,
+                socialLinks: talentData.socialLinks,
+                picture: userData.picture,
+              }}
+              onSubmit={handleUpdateDetails}
+            />
+          </Modal>
+
+          <Modal
+            isOpen={activeModal.type === "socials"}
+            onClose={closeModal}
+            title="Edit Social Links"
+          >
+            <SocialsForm
+              initialData={{
+                socialLinks: talentData.socialLinks,
+              }}
+              onSubmit={handleUpdateSocials}
+            />
+          </Modal>
         </div>
-
-        {/* MODALS */}
-        <Modal
-          isOpen={activeModal.type === "experience"}
-          onClose={closeModal}
-          title={
-            activeModal.index !== undefined
-              ? "Edit Experience"
-              : "Add Experience"
-          }
-        >
-          <ExperienceForm
-            initialData={
-              activeModal.index !== undefined
-                ? talentData.experience[activeModal.index]
-                : undefined
-            }
-            onSubmit={handleUpdateExperience}
-            onDelete={
-              activeModal.index !== undefined
-                ? () => removeItem("experience", activeModal.index!)
-                : undefined
-            }
-          />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "skills"}
-          onClose={closeModal}
-          title={activeModal.index !== undefined ? "Edit Skill" : "Add Skill"}
-        >
-          <SkillForm
-            initialData={
-              activeModal.index !== undefined
-                ? talentData.skills[activeModal.index]
-                : undefined
-            }
-            onSubmit={handleUpdateSkill}
-            onDelete={
-              activeModal.index !== undefined
-                ? () => removeItem("skills", activeModal.index!)
-                : undefined
-            }
-          />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "languages"}
-          onClose={closeModal}
-          title={
-            activeModal.index !== undefined ? "Edit Language" : "Add Language"
-          }
-        >
-          <LanguageForm
-            initialData={
-              activeModal.index !== undefined
-                ? talentData.languages[activeModal.index]
-                : undefined
-            }
-            onSubmit={handleUpdateLanguage}
-            onDelete={
-              activeModal.index !== undefined
-                ? () => removeItem("languages", activeModal.index!)
-                : undefined
-            }
-          />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "certificates"}
-          onClose={closeModal}
-          title={
-            activeModal.index !== undefined ? "Edit Certificate" : "Add Certificate"
-          }
-        >
-          <CertificateForm
-            initialData={
-              activeModal.index !== undefined
-                ? talentData.certifications[activeModal.index]
-                : undefined
-            }
-            onSubmit={handleUpdateCertificate}
-            onCancel={closeModal}
-          />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "bio"}
-          onClose={closeModal}
-          title="Edit Personal Bio"
-        >
-          <BioForm initialData={talentData.bio} onSubmit={handleUpdateBio} />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "details"}
-          onClose={closeModal}
-          title="Edit Profile Details"
-        >
-          <UserDetailsForm
-            initialData={{
-              firstName: userData.firstName,
-              lastName: userData.lastName,
-              email: userData.email,
-              headline: talentData.headline,
-              location: talentData.location,
-              socialLinks: talentData.socialLinks,
-              picture: userData.picture,
-            }}
-            onSubmit={handleUpdateDetails}
-          />
-        </Modal>
-
-        <Modal
-          isOpen={activeModal.type === "socials"}
-          onClose={closeModal}
-          title="Edit Social Links"
-        >
-          <SocialsForm
-            initialData={{
-              socialLinks: talentData.socialLinks,
-            }}
-            onSubmit={handleUpdateSocials}
-          />
-        </Modal>
-      </div>
       </phantom-ui>
     </div>
   );

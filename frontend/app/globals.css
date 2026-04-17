@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "uploadthing/tw/v4";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
@@ -148,12 +149,14 @@ phantom-ui {
 }
 
 phantom-ui[loading] * {
-    margin: 2px 0
-  }
+  margin: 2px 0;
+}
 
-  phantom-ui[loading] img, phantom-ui[loading] svg,
-  phantom-ui[loading] video, phantom-ui[loading] canvas,
-  phantom-ui[loading] button, phantom-ui[loading] [role="button"] {
-    margin: 2px 0;
-
-  }
+phantom-ui[loading] img,
+phantom-ui[loading] svg,
+phantom-ui[loading] video,
+phantom-ui[loading] canvas,
+phantom-ui[loading] button,
+phantom-ui[loading] [role="button"] {
+  margin: 2px 0;
+}

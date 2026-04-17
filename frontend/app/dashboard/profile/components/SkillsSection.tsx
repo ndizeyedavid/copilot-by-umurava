@@ -52,7 +52,7 @@ export default function SkillsSection({
     <Card className="p-8 bg-white rounded-[10px] border border-gray-100 shadow-none">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-[#F3F4FF] rounded-xl">
+          <div>
             <Award className="w-5 h-5 text-[#286ef0]" />
           </div>
           <h2 className="text-xl font-bold text-[#25324B]">

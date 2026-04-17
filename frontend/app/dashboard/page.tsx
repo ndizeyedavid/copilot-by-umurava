@@ -1,12 +1,7 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import {
-  Briefcase,
-  CheckCircle2,
-  FileText,
-  XCircle,
-} from "lucide-react";
+import { Briefcase, CheckCircle2, FileText, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 
@@ -138,22 +133,24 @@ export default function DashboardPage() {
     });
   }, [jobs, applications]);
 
-  const deadlines = useMemo(() => {
+  const allDeadlines = useMemo(() => {
     return jobs
       .filter((j) => new Date(j.deadline).getTime() > Date.now())
       .sort(
         (a, b) =>
           new Date(a.deadline).getTime() - new Date(b.deadline).getTime(),
       )
-      .slice(0, 3)
       .map((j) => ({
         name: j.title,
         company: "Umurava",
-        time: new Date(j.deadline).toLocaleDateString(),
+        time: j.deadline,
         avatar: "/images/companies/umurava.png",
       }));
   }, [jobs]);
 
+  const deadlines = useMemo(() => {
+    return allDeadlines.slice(0, 3);
+  }, [allDeadlines]);
 
   return (
     <phantom-ui loading={jobsQuery.isLoading} animation="shimmer">
@@ -164,7 +161,10 @@ export default function DashboardPage() {
           <JobRecommendations jobs={recommendedJobs} />
         </div>
 
-        <DashboardRightSidebar deadlines={deadlines} />
+        <DashboardRightSidebar
+          deadlines={deadlines}
+          allDeadlines={allDeadlines}
+        />
       </div>
     </phantom-ui>
   );
