@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Screening from "../models/screening.model";
 import Jobs from "../models/jobs.model";
 import Talent from "../models/talents.model";
+import User from "../models/user.model";
 import Application from "../models/application.model";
 import { IScreening } from "../types/screening.types";
 import {
@@ -212,10 +213,12 @@ const screeningController = {
         return res.status(400).json({ message: "talents array is required" });
       }
 
-      const n = Number(topN);
-      const safeTopN = Number.isFinite(n)
-        ? Math.min(Math.max(Math.floor(n), 1), list.length)
-        : Math.min(10, list.length);
+      const safeTopN = (() => {
+        const n = Number(topN);
+        const max = list.length;
+        if (!Number.isFinite(n)) return Math.min(10, max);
+        return Math.min(Math.max(Math.floor(n), 1), max);
+      })();
 
       const jobData: JobData = {
         title: job.title,
@@ -224,68 +227,214 @@ const screeningController = {
         weights: job.weights,
       };
 
-      const candidatesData: CandidateData[] = list.map(
-        (t: any, idx: number) => {
-          const email = String(t?.email ?? "").trim();
-          const id = email ? `umurava:${email}` : `umurava:${idx + 1}`;
+      const saved: Array<{
+        talentId: string;
+        userId: string;
+        email: string;
+        firstName: string;
+        lastName: string;
+        headline: string;
+        location: string;
+        raw: any;
+      }> = [];
 
-          const skills = Array.isArray(t?.skills) ? t.skills : [];
-          const experience = Array.isArray(t?.experience) ? t.experience : [];
-          const education = Array.isArray(t?.education) ? t.education : [];
-          const certifications = Array.isArray(t?.certifications)
-            ? t.certifications
-            : [];
-          const projects = Array.isArray(t?.projects) ? t.projects : [];
+      for (const raw of list) {
+        const email = String(raw?.email ?? "")
+          .trim()
+          .toLowerCase();
+        if (!email) continue;
 
-          return {
-            id,
-            firstName: String(t?.firstName ?? "Unknown"),
-            lastName: String(t?.lastName ?? ""),
-            headline: String(t?.headline ?? ""),
-            bio: t?.bio ? String(t.bio) : undefined,
-            skills: skills
-              .filter(Boolean)
-              .map((s: any) => ({
-                name: String(s?.name ?? ""),
-                level: String(s?.level ?? "Intermediate"),
-                yearsOfExperience: Number(s?.yearsOfExperience ?? 0),
-              }))
-              .filter((s: any) => s.name),
-            experience: experience.filter(Boolean).map((e: any) => ({
-              company: String(e?.company ?? ""),
-              role: String(e?.role ?? ""),
-              description: String(e?.description ?? ""),
-              technologies: Array.isArray(e?.technologies)
-                ? e.technologies.map((x: any) => String(x))
+        const firstName =
+          String(raw?.firstName ?? "Unknown").trim() || "Unknown";
+        const lastName = String(raw?.lastName ?? "").trim();
+        const headline = String(raw?.headline ?? "Talent").trim() || "Talent";
+        const location = String(raw?.location ?? "").trim();
+
+        let user = await User.findOne({ email });
+        if (!user) {
+          user = await User.create({
+            email,
+            firstName,
+            lastName,
+            role: "talent",
+          });
+        }
+
+        const skills = Array.isArray(raw?.skills) ? raw.skills : [];
+        const languages = Array.isArray(raw?.languages) ? raw.languages : [];
+        const experience = Array.isArray(raw?.experience) ? raw.experience : [];
+        const education = Array.isArray(raw?.education) ? raw.education : [];
+        const certifications = Array.isArray(raw?.certifications)
+          ? raw.certifications
+          : [];
+        const projects = Array.isArray(raw?.projects) ? raw.projects : [];
+
+        const normalizedSkills = skills
+          .filter(Boolean)
+          .map((s: any) => ({
+            name: String(s?.name ?? "").trim(),
+            level: String(s?.level ?? "Intermediate"),
+            yearsOfExperience: Number(s?.yearsOfExperience ?? 0),
+          }))
+          .filter((s: any) => s.name);
+
+        const normalizedLanguages = languages.filter(Boolean).map((l: any) => ({
+          name: l?.name ? String(l.name) : undefined,
+          proficiency: l?.proficiency ? String(l.proficiency) : undefined,
+        }));
+
+        const normalizedExperience = experience
+          .filter(Boolean)
+          .map((e: any) => ({
+            company: e?.company ? String(e.company) : undefined,
+            role: e?.role ? String(e.role) : undefined,
+            startDate: e?.startDate ? new Date(e.startDate) : undefined,
+            endDate: e?.endDate ? new Date(e.endDate) : undefined,
+            description: e?.description ? String(e.description) : undefined,
+            technologies: Array.isArray(e?.technologies)
+              ? e.technologies.map((x: any) => String(x))
+              : [],
+            IsCurrent: Boolean(e?.IsCurrent),
+          }));
+
+        const normalizedEducation = education
+          .filter(Boolean)
+          .map((ed: any) => ({
+            institution: ed?.institution ? String(ed.institution) : undefined,
+            degree: ed?.degree ? String(ed.degree) : undefined,
+            fieldOfStudy: ed?.fieldOfStudy
+              ? String(ed.fieldOfStudy)
+              : undefined,
+            startYear: ed?.startYear ? new Date(ed.startYear) : undefined,
+            endYear: ed?.endYear ? new Date(ed.endYear) : undefined,
+          }));
+
+        const normalizedCerts = certifications
+          .filter(Boolean)
+          .map((c: any) => ({
+            name: c?.name ? String(c.name) : undefined,
+            issuer: c?.issuer ? String(c.issuer) : undefined,
+            issueDate: c?.issueDate ? new Date(c.issueDate) : undefined,
+          }));
+
+        const normalizedProjects = projects.filter(Boolean).map((p: any) => ({
+          name: p?.name ? String(p.name) : undefined,
+          description: p?.description ? String(p.description) : undefined,
+          technologies: Array.isArray(p?.technologies)
+            ? p.technologies.map((x: any) => String(x))
+            : [],
+          role: p?.role ? String(p.role) : undefined,
+          link: p?.link ? String(p.link) : undefined,
+          startDate: p?.startDate ? new Date(p.startDate) : undefined,
+          endDate: p?.endDate ? new Date(p.endDate) : undefined,
+        }));
+
+        let talent = await Talent.findOne({ userId: user._id as any } as any);
+        if (!talent) {
+          talent = await Talent.create({
+            userId: user._id as any,
+            headline,
+          } as any);
+        }
+
+        await Talent.findByIdAndUpdate(talent._id, {
+          headline,
+          bio: raw?.bio ? String(raw.bio) : undefined,
+          location,
+          skills: normalizedSkills,
+          languages: normalizedLanguages,
+          experience: normalizedExperience,
+          education: normalizedEducation,
+          certifications: normalizedCerts,
+          projects: normalizedProjects,
+          availability: raw?.availability,
+          socialLinks: Array.isArray(raw?.socialLinks)
+            ? raw.socialLinks.map((x: any) => String(x))
+            : [],
+        });
+
+        if (String(user.talentProfileId ?? "") !== String(talent._id)) {
+          await User.findByIdAndUpdate(user._id, {
+            talentProfileId: talent._id.toString(),
+          });
+        }
+
+        saved.push({
+          talentId: talent._id.toString(),
+          userId: user._id.toString(),
+          email,
+          firstName,
+          lastName,
+          headline,
+          location,
+          raw,
+        });
+      }
+
+      if (saved.length === 0) {
+        return res.status(400).json({
+          message: "No valid talents to import (missing email)",
+        });
+      }
+
+      const candidatesData: CandidateData[] = saved.map((s) => {
+        const raw = s.raw ?? {};
+        const skills = Array.isArray(raw?.skills) ? raw.skills : [];
+        const experience = Array.isArray(raw?.experience) ? raw.experience : [];
+        const education = Array.isArray(raw?.education) ? raw.education : [];
+        const certifications = Array.isArray(raw?.certifications)
+          ? raw.certifications
+          : [];
+        const projects = Array.isArray(raw?.projects) ? raw.projects : [];
+
+        return {
+          id: s.talentId,
+          firstName: s.firstName,
+          lastName: s.lastName,
+          headline: s.headline,
+          bio: raw?.bio ? String(raw.bio) : undefined,
+          skills: skills
+            .filter(Boolean)
+            .map((sk: any) => ({
+              name: String(sk?.name ?? ""),
+              level: String(sk?.level ?? "Intermediate"),
+              yearsOfExperience: Number(sk?.yearsOfExperience ?? 0),
+            }))
+            .filter((sk: any) => sk.name),
+          experience: experience.filter(Boolean).map((e: any) => ({
+            company: String(e?.company ?? ""),
+            role: String(e?.role ?? ""),
+            description: String(e?.description ?? ""),
+            technologies: Array.isArray(e?.technologies)
+              ? e.technologies.map((x: any) => String(x))
+              : [],
+            startDate: e?.startDate ? new Date(e.startDate) : new Date(),
+            endDate: e?.endDate ? new Date(e.endDate) : undefined,
+          })),
+          education: education.filter(Boolean).map((ed: any) => ({
+            institution: String(ed?.institution ?? ""),
+            degree: String(ed?.degree ?? ""),
+            fieldOfStudy: String(ed?.fieldOfStudy ?? ""),
+          })),
+          certifications: certifications
+            .filter(Boolean)
+            .map((c: any) => ({
+              name: String(c?.name ?? ""),
+              issuer: String(c?.issuer ?? ""),
+            }))
+            .filter((c: any) => c.name),
+          projects: projects
+            .filter(Boolean)
+            .map((p: any) => ({
+              name: String(p?.name ?? ""),
+              description: String(p?.description ?? ""),
+              technologies: Array.isArray(p?.technologies)
+                ? p.technologies.map((x: any) => String(x))
                 : [],
-              startDate: e?.startDate ? new Date(e.startDate) : new Date(),
-              endDate: e?.endDate ? new Date(e.endDate) : undefined,
-            })),
-            education: education.filter(Boolean).map((ed: any) => ({
-              institution: String(ed?.institution ?? ""),
-              degree: String(ed?.degree ?? ""),
-              fieldOfStudy: String(ed?.fieldOfStudy ?? ""),
-            })),
-            certifications: certifications
-              .filter(Boolean)
-              .map((c: any) => ({
-                name: String(c?.name ?? ""),
-                issuer: String(c?.issuer ?? ""),
-              }))
-              .filter((c: any) => c.name),
-            projects: projects
-              .filter(Boolean)
-              .map((p: any) => ({
-                name: String(p?.name ?? ""),
-                description: String(p?.description ?? ""),
-                technologies: Array.isArray(p?.technologies)
-                  ? p.technologies.map((x: any) => String(x))
-                  : [],
-              }))
-              .filter((p: any) => p.name),
-          };
-        },
-      );
+            }))
+            .filter((p: any) => p.name),
+        };
+      });
 
       const aiResult = await evaluateCandidates(jobData, candidatesData);
 
@@ -301,26 +450,24 @@ const screeningController = {
       });
 
       const metaById = new Map(
-        list.map((t: any, idx: number) => {
-          const email = String(t?.email ?? "").trim();
-          const id = email ? `umurava:${email}` : `umurava:${idx + 1}`;
-          return [
-            id,
-            {
-              email,
-              firstName: String(t?.firstName ?? ""),
-              lastName: String(t?.lastName ?? ""),
-              headline: String(t?.headline ?? ""),
-              location: String(t?.location ?? ""),
-            },
-          ];
-        }),
+        saved.map((s) => [
+          s.talentId,
+          {
+            email: s.email,
+            firstName: s.firstName,
+            lastName: s.lastName,
+            headline: s.headline,
+            location: s.location,
+            userId: s.userId,
+          },
+        ]),
       );
 
       return res.status(200).json({
         message: `AI screening complete. ${trimmed.length} Umurava talents ranked`,
         screening,
         topN: safeTopN,
+        importedCount: saved.length,
         rankedTalents: trimmed.map((c) => ({
           candidateId: c.candidateId,
           rank: c.rank,
