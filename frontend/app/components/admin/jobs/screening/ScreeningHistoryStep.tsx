@@ -45,7 +45,7 @@ export default function ScreeningHistoryStep({
       </div>
 
       {screenings.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-gray-200 bg-white py-20 text-center">
+        <div className="flex flex-col items-center justify-center rounded-[10px] border-2 border-dashed border-gray-200 bg-white py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-[10px] bg-gray-50 text-gray-400">
             <BrainCircuit className="h-8 w-8" />
           </div>

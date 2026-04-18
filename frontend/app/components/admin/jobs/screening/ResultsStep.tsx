@@ -77,11 +77,8 @@ export default function ResultsStep({
         Back to History
       </button>
 
-      <div className="flex flex-col items-center justify-between gap-6 rounded-3xl border border-blue-100 bg-[#F8F8FD] p-6 md:flex-row">
+      <div className="flex flex-col items-center justify-between gap-6 rounded-[10px] border border-blue-100 bg-[#F8F8FD] p-6 md:flex-row">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-[10px] bg-[#286ef0] text-white">
-            <BarChart3 className="h-7 w-7" />
-          </div>
           <div>
             <h3 className="text-lg font-bold text-[#25324B]">
               Screening Summary

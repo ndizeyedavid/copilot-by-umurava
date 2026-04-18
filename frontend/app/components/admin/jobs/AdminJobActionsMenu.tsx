@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   MoreHorizontal,
   Pencil,
@@ -24,6 +25,7 @@ export default function AdminJobActionsMenu({
   onAction: (action: Action, row: AdminJobRow) => void;
   align?: "left" | "right";
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -84,7 +86,7 @@ export default function AdminJobActionsMenu({
               role="menuitem"
               onClick={() => {
                 setOpen(false);
-                window.location.href = `/admin/jobs/${row.id}/screening`;
+                router.push(`/admin/jobs/${row.id}/screening`);
               }}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#286ef0] hover:bg-blue-50"
             >

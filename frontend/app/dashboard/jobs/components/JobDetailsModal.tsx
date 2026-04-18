@@ -102,7 +102,7 @@ export default function JobDetailsModal({
 
             {/* Right Side: Quick Stats */}
             <div className="space-y-6">
-              <Card className="p-6 bg-[#F8F9FD] border-none shadow-none rounded-3xl space-y-6">
+              <Card className="p-6 bg-[#F8F9FD] border-none shadow-none rounded-[10px] space-y-6">
                 <div className="flex items-center gap-4">
                   <div className="p-2 bg-white rounded-full shadow-sm text-[#286ef0]">
                     <Briefcase className="w-5 h-5" />

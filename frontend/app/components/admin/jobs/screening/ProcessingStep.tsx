@@ -10,7 +10,7 @@ export default function ProcessingStep({
   progress: number;
 }) {
   return (
-    <div className="flex animate-in fade-in slide-in-from-bottom-2 duration-300 flex-col items-center justify-center rounded-3xl border border-gray-100 bg-white py-20 shadow-sm">
+    <div className="flex animate-in fade-in slide-in-from-bottom-2 duration-300 flex-col items-center justify-center rounded-[10px] border border-gray-100 bg-white py-20 shadow-sm">
       <div className="relative mb-8">
         <Loader2 className="h-24 w-24 animate-spin text-[#286ef0] stroke-[1.5px]" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -19,7 +19,9 @@ export default function ProcessingStep({
       </div>
 
       <div className="space-y-3 text-center">
-        <h2 className="text-2xl font-bold text-[#25324B]">AI is Screening...</h2>
+        <h2 className="text-2xl font-bold text-[#25324B]">
+          AI is Screening...
+        </h2>
         <div className="h-6 overflow-hidden">
           <p className="font-semibold text-[#286ef0] animate-in slide-in-from-bottom-2 duration-300">
             {message}

@@ -34,7 +34,7 @@ export default function SourceSelectionStep({
         Back to Job Selection
       </button>
 
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-[10px] border border-gray-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-bold text-[#25324B]">Top candidates</p>
         <p className="mt-1 text-xs text-[#7C8493]">
           Choose number of top ranked candidates to keep.
@@ -91,7 +91,7 @@ export default function SourceSelectionStep({
       <div className="grid grid-cols-1 gap-6 pt-4 md:grid-cols-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <button
           onClick={() => onSelect("internal", { topN })}
-          className="group flex flex-col items-center rounded-3xl border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30"
+          className="group flex flex-col items-center rounded-[10px] border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30"
         >
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[10px] bg-blue-50 text-[#286ef0] transition-transform group-hover:scale-110">
             <Users className="h-10 w-10" />
@@ -110,7 +110,7 @@ export default function SourceSelectionStep({
 
         <button
           onClick={() => onSelect("umurava", { topN })}
-          className="group flex flex-col items-center rounded-3xl border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30"
+          className="group flex flex-col items-center rounded-[10px] border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30"
         >
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[10px] bg-emerald-50 text-emerald-600 transition-transform group-hover:scale-110">
             <Globe className="h-10 w-10" />
@@ -127,7 +127,7 @@ export default function SourceSelectionStep({
           </div>
         </button>
 
-        <div className="group relative flex flex-col items-center overflow-hidden rounded-3xl border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30">
+        <div className="group relative flex flex-col items-center overflow-hidden rounded-[10px] border-2 border-dashed border-gray-200 bg-white p-10 text-center transition-all hover:border-[#286ef0] hover:bg-blue-50/30">
           <input
             type="file"
             className="absolute inset-0 cursor-pointer opacity-0"

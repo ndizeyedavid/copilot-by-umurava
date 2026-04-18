@@ -102,6 +102,13 @@ export default function AdminJobsCards({
           >
             View job details
           </Link>
+
+          <Link
+            href={`/admin/jobs/${row.id}/screening`}
+            className="mt-2 block w-full rounded-xl bg-[#286ef0] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#1f5fe0]"
+          >
+            AI Screening
+          </Link>
         </div>
       ))}
 
