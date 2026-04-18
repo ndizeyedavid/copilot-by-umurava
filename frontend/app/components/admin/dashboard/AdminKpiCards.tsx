@@ -66,7 +66,7 @@ export default function AdminKpiCards({
       right: <ArrowUpRight className="h-5 w-5 text-white/90" />,
     },
     {
-      label: "Candidates",
+      label: "Talents",
       value: candidates,
       href: "/admin/candidates",
       variant: "sky",

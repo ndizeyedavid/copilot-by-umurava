@@ -41,7 +41,7 @@ const mainNav: NavItem[] = [
     icon: <FileText className="h-5 w-5" />,
   },
   {
-    label: "Candidates",
+    label: "Talents",
     href: "/admin/candidates",
     icon: <UserSquare2 className="h-5 w-5" />,
   },
