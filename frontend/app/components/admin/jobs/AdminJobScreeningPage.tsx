@@ -320,7 +320,7 @@ export default function AdminJobScreeningPage({
       {step === "processing" && (
         <ProcessingStep
           message={LOADING_MESSAGES[loadingMsgIndex]}
-          progress={((loadingMsgIndex + 1) * 100) / LOADING_MESSAGES.length}
+          progress={((loadingMsgIndex + 0.5) * 100) / LOADING_MESSAGES.length}
         />
       )}
     </div>
