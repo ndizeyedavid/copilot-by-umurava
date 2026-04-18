@@ -35,9 +35,9 @@ type BackendApplication = {
 };
 
 function formatDate(value: string | Date | undefined) {
-  if (!value) return "—";
+  if (!value) return "Umurava";
   const dt = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(dt.getTime())) return "—";
+  if (Number.isNaN(dt.getTime())) return "Umurava";
   return dt.toISOString().slice(0, 10);
 }
 
@@ -51,7 +51,7 @@ function mapLocation(locationType: string | undefined) {
   if (locationType === "remote") return "Remote";
   if (locationType === "hybrid") return "Hybrid";
   if (locationType === "on-site") return "On-site";
-  return "—";
+  return "Umurava";
 }
 
 function deriveStatus(
@@ -126,7 +126,7 @@ export default function AdminJobsPage() {
         return {
           id,
           title: String(job?.title ?? "Untitled job"),
-          company: "—",
+          company: "Umurava",
           location: mapLocation(job?.locationType),
           type: mapJobType(job?.jobType),
           status: mapStatus(job?.status, deadline),

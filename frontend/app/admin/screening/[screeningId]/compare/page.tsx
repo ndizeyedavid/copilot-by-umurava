@@ -404,8 +404,8 @@ export default function ScreeningComparePage() {
                       Availability
                     </p>
                     <p className="mt-1 text-xs font-semibold text-[#25324B]">
-                      {talentA.availability?.type ?? "—"} •{" "}
-                      {talentA.availability?.status ?? "—"}
+                      {talentA.availability?.type ?? "Umurava"} •{" "}
+                      {talentA.availability?.status ?? "Umurava"}
                     </p>
                   </div>
                 </div>
@@ -533,8 +533,8 @@ export default function ScreeningComparePage() {
                       Availability
                     </p>
                     <p className="mt-1 text-xs font-semibold text-[#25324B]">
-                      {talentB.availability?.type ?? "—"} •{" "}
-                      {talentB.availability?.status ?? "—"}
+                      {talentB.availability?.type ?? "Umurava"} •{" "}
+                      {talentB.availability?.status ?? "Umurava"}
                     </p>
                   </div>
                 </div>

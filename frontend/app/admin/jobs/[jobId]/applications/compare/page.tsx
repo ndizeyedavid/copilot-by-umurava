@@ -33,7 +33,12 @@ type BackendTalent = {
   projects?: { name?: string; description?: string; link?: string }[];
   availability?: { status?: string; type?: string };
   socialLinks?: string[];
-  userId?: { firstName?: string; lastName?: string; email?: string; phone?: string };
+  userId?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+  };
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -138,18 +143,30 @@ export default function ApplicationsComparePage() {
     const aSet = normSet(aSkills);
     const bSet = normSet(bSkills);
 
-    const sharedSkills = aSkills.filter((s) => bSet.has(s.trim().toLowerCase()));
-    const aOnlySkills = aSkills.filter((s) => !bSet.has(s.trim().toLowerCase()));
-    const bOnlySkills = bSkills.filter((s) => !aSet.has(s.trim().toLowerCase()));
+    const sharedSkills = aSkills.filter((s) =>
+      bSet.has(s.trim().toLowerCase()),
+    );
+    const aOnlySkills = aSkills.filter(
+      (s) => !bSet.has(s.trim().toLowerCase()),
+    );
+    const bOnlySkills = bSkills.filter(
+      (s) => !aSet.has(s.trim().toLowerCase()),
+    );
 
     const aLang = langList(talentA);
     const bLang = langList(talentB);
     const aLangSet = normSet(aLang);
     const bLangSet = normSet(bLang);
 
-    const sharedLang = aLang.filter((l) => bLangSet.has(l.trim().toLowerCase()));
-    const aOnlyLang = aLang.filter((l) => !bLangSet.has(l.trim().toLowerCase()));
-    const bOnlyLang = bLang.filter((l) => !aLangSet.has(l.trim().toLowerCase()));
+    const sharedLang = aLang.filter((l) =>
+      bLangSet.has(l.trim().toLowerCase()),
+    );
+    const aOnlyLang = aLang.filter(
+      (l) => !bLangSet.has(l.trim().toLowerCase()),
+    );
+    const bOnlyLang = bLang.filter(
+      (l) => !aLangSet.has(l.trim().toLowerCase()),
+    );
 
     const aExp = expCount(talentA);
     const bExp = expCount(talentB);
@@ -185,10 +202,10 @@ export default function ApplicationsComparePage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Applications
           </Link>
-          <h1 className="text-2xl font-bold text-[#25324B]">Compare Applicants</h1>
-          <p className="text-sm text-[#7C8493]">
-            Side-by-side profile diff.
-          </p>
+          <h1 className="text-2xl font-bold text-[#25324B]">
+            Compare Applicants
+          </h1>
+          <p className="text-sm text-[#7C8493]">Side-by-side profile diff.</p>
         </div>
       </div>
 
@@ -198,9 +215,7 @@ export default function ApplicationsComparePage() {
             <AlertTriangle className="h-4 w-4" />
             Need 2 different applicants.
           </div>
-          <p className="mt-1 text-xs">
-            Go back, pick 2 checkboxes, click Vs.
-          </p>
+          <p className="mt-1 text-xs">Go back, pick 2 checkboxes, click Vs.</p>
         </div>
       ) : isLoading ? (
         <div className="flex flex-col items-center justify-center rounded-[10px] border border-gray-200 bg-white py-20">
@@ -313,16 +328,20 @@ export default function ApplicationsComparePage() {
                   Skills count
                 </p>
                 <p className="mt-1 text-sm font-bold text-[#25324B]">
-                  A: {skillList(talentA).length} ({winsLabel(
+                  A: {skillList(talentA).length} (
+                  {winsLabel(
                     skillList(talentA).length,
                     skillList(talentB).length,
-                  )})
+                  )}
+                  )
                 </p>
                 <p className="text-sm font-bold text-[#25324B]">
-                  B: {skillList(talentB).length} ({winsLabel(
+                  B: {skillList(talentB).length} (
+                  {winsLabel(
                     skillList(talentB).length,
                     skillList(talentA).length,
-                  )})
+                  )}
+                  )
                 </p>
               </div>
               <div className="rounded-xl bg-white border border-indigo-100 p-4">
@@ -330,10 +349,12 @@ export default function ApplicationsComparePage() {
                   Projects count
                 </p>
                 <p className="mt-1 text-sm font-bold text-[#25324B]">
-                  A: {computed.aProj} ({winsLabel(computed.aProj, computed.bProj)})
+                  A: {computed.aProj} (
+                  {winsLabel(computed.aProj, computed.bProj)})
                 </p>
                 <p className="text-sm font-bold text-[#25324B]">
-                  B: {computed.bProj} ({winsLabel(computed.bProj, computed.aProj)})
+                  B: {computed.bProj} (
+                  {winsLabel(computed.bProj, computed.aProj)})
                 </p>
               </div>
             </div>
@@ -361,7 +382,9 @@ export default function ApplicationsComparePage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#25324B]">A only (gaps vs B)</p>
+                  <p className="text-xs font-semibold text-[#25324B]">
+                    A only (gaps vs B)
+                  </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {computed.aOnlySkills.length ? (
                       computed.aOnlySkills.map((s) => (
@@ -399,7 +422,9 @@ export default function ApplicationsComparePage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#25324B]">B only (gaps vs A)</p>
+                  <p className="text-xs font-semibold text-[#25324B]">
+                    B only (gaps vs A)
+                  </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {computed.bOnlySkills.length ? (
                       computed.bOnlySkills.map((s) => (
@@ -504,13 +529,20 @@ export default function ApplicationsComparePage() {
             left={
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#25324B]">Education entries</span>
-                  <span className="text-xs font-bold text-[#25324B]">{computed.aEdu}</span>
+                  <span className="text-xs font-semibold text-[#25324B]">
+                    Education entries
+                  </span>
+                  <span className="text-xs font-bold text-[#25324B]">
+                    {computed.aEdu}
+                  </span>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#25324B]">Availability</p>
+                  <p className="text-xs font-semibold text-[#25324B]">
+                    Availability
+                  </p>
                   <p className="mt-1 text-xs text-[#7C8493]">
-                    {talentA.availability?.type ?? "—"} • {talentA.availability?.status ?? "—"}
+                    {talentA.availability?.type ?? "Umurava"} •{" "}
+                    {talentA.availability?.status ?? "Umurava"}
                   </p>
                 </div>
               </div>
@@ -518,13 +550,20 @@ export default function ApplicationsComparePage() {
             right={
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#25324B]">Education entries</span>
-                  <span className="text-xs font-bold text-[#25324B]">{computed.bEdu}</span>
+                  <span className="text-xs font-semibold text-[#25324B]">
+                    Education entries
+                  </span>
+                  <span className="text-xs font-bold text-[#25324B]">
+                    {computed.bEdu}
+                  </span>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#25324B]">Availability</p>
+                  <p className="text-xs font-semibold text-[#25324B]">
+                    Availability
+                  </p>
                   <p className="mt-1 text-xs text-[#7C8493]">
-                    {talentB.availability?.type ?? "—"} • {talentB.availability?.status ?? "—"}
+                    {talentB.availability?.type ?? "Umurava"} •{" "}
+                    {talentB.availability?.status ?? "Umurava"}
                   </p>
                 </div>
               </div>

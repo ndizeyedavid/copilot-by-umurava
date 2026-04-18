@@ -32,9 +32,9 @@ type BackendApplication = {
 };
 
 function formatDate(value: string | Date | undefined) {
-  if (!value) return "—";
+  if (!value) return "Umurava";
   const dt = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(dt.getTime())) return "—";
+  if (Number.isNaN(dt.getTime())) return "Umurava";
   return dt.toISOString().slice(0, 10);
 }
 
@@ -48,7 +48,7 @@ function mapLocation(locationType: string | undefined) {
   if (locationType === "remote") return "Remote";
   if (locationType === "hybrid") return "Hybrid";
   if (locationType === "on-site") return "On-site";
-  return "—";
+  return "Umurava";
 }
 
 function deriveStatus(
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
         return {
           id,
           title: String(j?.title ?? "Untitled job"),
-          company: "—",
+          company: "Umurava",
           location: mapLocation(j?.locationType),
           type: mapJobType(j?.jobType),
           status: mapStatus(j?.status, j?.deadline),
@@ -223,8 +223,8 @@ export default function AdminDashboard() {
           id: String(app._id),
           applicantName: name,
           jobTitle,
-          department: "—",
-          experience: "—",
+          department: "Umurava",
+          experience: "Umurava",
           status: statusMap[String(app.status)] || "Under Review",
           avatar: user?.picture || "/images/companies/dummy.png",
         };
@@ -232,11 +232,18 @@ export default function AdminDashboard() {
   }, [applications, jobs, talents]);
 
   const jobStats = useMemo(() => {
-    const buckets = new Map<string, number>();
+    const applicationsBuckets = new Map<string, number>();
     for (const app of applications) {
       const d = new Date(app.createdAt || app.createdAt || Date.now());
       const label = d.toLocaleString("en-US", { month: "short" });
-      buckets.set(label, (buckets.get(label) || 0) + 1);
+      applicationsBuckets.set(label, (applicationsBuckets.get(label) || 0) + 1);
+    }
+
+    const postedBuckets = new Map<string, number>();
+    for (const j of jobs) {
+      const d = new Date(j.createdAt || Date.now());
+      const label = d.toLocaleString("en-US", { month: "short" });
+      postedBuckets.set(label, (postedBuckets.get(label) || 0) + 1);
     }
 
     const months = [
@@ -256,10 +263,10 @@ export default function AdminDashboard() {
 
     return months.map((m) => ({
       label: m,
-      views: 0,
-      applications: buckets.get(m) || 0,
+      posted: postedBuckets.get(m) || 0,
+      applications: applicationsBuckets.get(m) || 0,
     }));
-  }, [applications]);
+  }, [applications, jobs]);
 
   const composition = useMemo(() => {
     const yearsForTalent = (t: any) => {
@@ -308,81 +315,88 @@ export default function AdminDashboard() {
   }, [talents]);
 
   return (
-    <div className="space-y-6">
-      <AdminKpiCards
-        totalJobs={kpis.totalJobs}
-        openJobs={kpis.openJobs}
-        closedJobs={kpis.closedJobs}
-        candidates={kpis.candidates}
-      />
-
-      <AdminJobStatisticsChart data={jobStats} rangeLabel="This Month" />
-
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-lg font-semibold text-[#25324B]">Recent Jobs</p>
-            <p className="text-sm text-[#7C8493]">
-              Quick snapshot of active roles
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/jobs")}
-            className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
-          >
-            View All
-          </button>
-        </div>
-
-        <AdminJobsCards
-          rows={recentJobCards}
-          onAction={(action, row) => {
-            if (action === "view") {
-              router.push("/admin/jobs/" + row.id);
-              return;
-            }
-
-            if (action === "edit") {
-              router.push(`/admin/jobs/${row.id}/edit`);
-              return;
-            }
-
-            if (action === "delete") {
-              const ok = window.confirm(
-                "Delete this job? This cannot be undone.",
-              );
-              if (!ok) return;
-              deleteJobMutation.mutate(row.id);
-              return;
-            }
-
-            if (action === "close") {
-              updateJobStatusMutation.mutate({
-                jobId: row.id,
-                status: "closed",
-              });
-              return;
-            }
-
-            if (action === "open") {
-              updateJobStatusMutation.mutate({ jobId: row.id, status: "open" });
-            }
-          }}
+    <phantom-ui loading={talentsQuery.isLoading}>
+      <div className="space-y-6">
+        <AdminKpiCards
+          totalJobs={kpis.totalJobs}
+          openJobs={kpis.openJobs}
+          closedJobs={kpis.closedJobs}
+          candidates={kpis.candidates}
         />
-      </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <AdminRecentApplicationsTable rows={recentApplicationsRows} />
-        </div>
-        <div className="xl:col-span-1">
-          <AdminCandidateCompositionChart
-            data={composition}
-            totalLabel={`${kpis.candidates} candidates total`}
+        <AdminJobStatisticsChart data={jobStats} rangeLabel="This Month" />
+
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="text-lg font-semibold text-[#25324B]">
+                Recent Jobs
+              </p>
+              <p className="text-sm text-[#7C8493]">
+                Quick snapshot of active roles
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/jobs")}
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-[#25324B] hover:bg-gray-50"
+            >
+              View All
+            </button>
+          </div>
+
+          <AdminJobsCards
+            rows={recentJobCards}
+            onAction={(action, row) => {
+              if (action === "view") {
+                router.push("/admin/jobs/" + row.id);
+                return;
+              }
+
+              if (action === "edit") {
+                router.push(`/admin/jobs/${row.id}/edit`);
+                return;
+              }
+
+              if (action === "delete") {
+                const ok = window.confirm(
+                  "Delete this job? This cannot be undone.",
+                );
+                if (!ok) return;
+                deleteJobMutation.mutate(row.id);
+                return;
+              }
+
+              if (action === "close") {
+                updateJobStatusMutation.mutate({
+                  jobId: row.id,
+                  status: "closed",
+                });
+                return;
+              }
+
+              if (action === "open") {
+                updateJobStatusMutation.mutate({
+                  jobId: row.id,
+                  status: "open",
+                });
+              }
+            }}
           />
         </div>
+
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="xl:col-span-2">
+            <AdminRecentApplicationsTable rows={recentApplicationsRows} />
+          </div>
+          <div className="xl:col-span-1">
+            <AdminCandidateCompositionChart
+              data={composition}
+              totalLabel={`${kpis.candidates} candidates total`}
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </phantom-ui>
   );
 }

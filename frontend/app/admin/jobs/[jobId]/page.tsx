@@ -63,9 +63,9 @@ type BackendApplication = {
 };
 
 function formatDate(value: string | Date | undefined) {
-  if (!value) return "—";
+  if (!value) return "Umurava";
   const dt = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(dt.getTime())) return "—";
+  if (Number.isNaN(dt.getTime())) return "Umurava";
   return dt.toISOString().slice(0, 10);
 }
 
@@ -121,7 +121,7 @@ export default function AdminJobDetailsPage() {
     return {
       id,
       title: String(raw?.title ?? "Untitled job"),
-      company: "—",
+      company: "Umurava",
       description: String(raw?.description ?? ""),
       requirements: Array.isArray(raw?.requirements) ? raw.requirements : [],
       benefits: Array.isArray(raw?.benefits) ? raw.benefits : [],
@@ -141,7 +141,7 @@ export default function AdminJobDetailsPage() {
       },
       stats: { applicants, views: 0, postedAt: formatDate(raw?.createdAt) },
       status: mapStatus(raw?.status, deadline),
-      locationLabel: String(raw?.locationType ?? "—"),
+      locationLabel: String(raw?.locationType ?? "Umurava"),
     };
   }, [applicationsQuery.data, jobId, jobQuery.data]);
 

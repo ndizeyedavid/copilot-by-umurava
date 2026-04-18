@@ -67,7 +67,7 @@ export default function AdminApplicationsJobPicker() {
     return rawJobs.map((j) => ({
       id: j._id,
       title: j.title,
-      company: "—",
+      company: "Umurava",
       applicants: counts.get(j._id) ?? 0,
       status:
         j.status === "open"

@@ -12,7 +12,7 @@ import {
 
 type DataPoint = {
   label: string;
-  views: number;
+  posted: number;
   applications: number;
 };
 
@@ -28,20 +28,20 @@ export default function AdminJobStatisticsChart({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <p className="text-lg font-semibold text-[#25324B]">Job Statistics</p>
-          <p className="text-sm text-[#7C8493]">Views vs applications</p>
+          <p className="text-sm text-[#7C8493]">Posted vs applications</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#C7D2FE]" />
-              <span className="text-[#7C8493]">Job View</span>
+              <span className="text-[#7C8493]">Jobs Posted</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#4F46E5]" />
               <span className="text-[#7C8493]">Job Applied</span>
             </div>
           </div>
-          <span className="rounded-lg bg-[#F3F4FF] px-3 py-2 text-xs font-semibold text-[#286ef0]">
+          <span className="rounded-lg bg-[#F3F4FF] px-3 py-2 text-xs font-semibold text-[#286ef0] hidden">
             {rangeLabel}
           </span>
         </div>
@@ -50,7 +50,11 @@ export default function AdminJobStatisticsChart({
       <div className="h-[260px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} barCategoryGap={18}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EEF2FF" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#EEF2FF"
+            />
             <XAxis
               dataKey="label"
               axisLine={false}
@@ -71,7 +75,7 @@ export default function AdminJobStatisticsChart({
               labelStyle={{ color: "#111827", fontWeight: 600 }}
               itemStyle={{ color: "#111827" }}
             />
-            <Bar dataKey="views" fill="#C7D2FE" radius={[8, 8, 8, 8]} />
+            <Bar dataKey="posted" fill="#C7D2FE" radius={[8, 8, 8, 8]} />
             <Bar dataKey="applications" fill="#4F46E5" radius={[8, 8, 8, 8]} />
           </BarChart>
         </ResponsiveContainer>

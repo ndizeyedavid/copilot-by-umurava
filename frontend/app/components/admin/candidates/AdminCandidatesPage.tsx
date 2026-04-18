@@ -70,19 +70,19 @@ type BackendTalent = {
 
 function formatExperience(value: BackendTalent["experience"]) {
   const n = Array.isArray(value) ? value.length : 0;
-  if (n <= 0) return "—";
+  if (n <= 0) return "Umurava";
   if (n === 1) return "1 role";
   return `${n} roles`;
 }
 
 function formatEducation(value: BackendTalent["education"]) {
   const n = Array.isArray(value) ? value.length : 0;
-  if (n <= 0) return "—";
+  if (n <= 0) return "Umurava";
   const latest = value[n - 1] as any;
   const degree = String(latest?.degree ?? "").trim();
   const field = String(latest?.fieldOfStudy ?? "").trim();
   if (degree && field) return `${degree} • ${field}`;
-  return degree || field || "—";
+  return degree || field || "Umurava";
 }
 
 export default function AdminCandidatesPage() {

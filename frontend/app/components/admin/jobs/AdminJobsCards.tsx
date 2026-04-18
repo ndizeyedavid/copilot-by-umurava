@@ -25,7 +25,7 @@ export default function AdminJobsCards({
 }: {
   rows: AdminJobRow[];
   onAction: (
-    action: "edit" | "close" | "open" | "delete",
+    action: "view" | "edit" | "close" | "open" | "delete",
     row: AdminJobRow,
   ) => void;
 }) {

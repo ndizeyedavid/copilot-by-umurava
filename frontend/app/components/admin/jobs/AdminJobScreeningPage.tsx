@@ -143,7 +143,7 @@ export default function AdminJobScreeningPage({
     return rawJobs.map((j) => ({
       id: j._id,
       title: j.title,
-      company: "—",
+      company: "Umurava",
       applicants: counts.get(j._id) ?? 0,
     }));
   }, [jobsQuery.data, applicationsQuery.data]);
@@ -165,7 +165,7 @@ export default function AdminJobScreeningPage({
       return {
         id: s._id,
         jobId: s.jobId,
-        jobTitle: jobs.find((j) => j.id === s.jobId)?.title || "—",
+        jobTitle: jobs.find((j) => j.id === s.jobId)?.title || "Umurava",
         date: new Date(s.createdAt).toLocaleDateString(),
         candidateCount: Array.isArray(s.candidates) ? s.candidates.length : 0,
         topScore: top,
