@@ -49,6 +49,9 @@ type BackendScreening = {
     confidence: "high" | "medium" | "low";
   }[];
   createdAt: string;
+  pipelineState?: {
+    currentStep?: string;
+  };
 };
 
 type BackendJob = {
@@ -188,9 +191,20 @@ export default function AdminJobScreeningPage({
         screeningId: String(res.data?.screeningId ?? ""),
       };
     },
-    onSuccess: ({ screeningId }) => {
-      if (!screeningId) return;
-      router.push(`/admin/screening/${screeningId}`);
+    onSuccess: (data) => {
+      if (data.screeningId) {
+        router.push(`/admin/screening/${data.screeningId}`);
+      }
+    },
+  });
+
+  const deleteScreeningMutation = useMutation({
+    mutationFn: async (screeningId: string) => {
+      const res = await api.delete(`/screening/${screeningId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      screeningsQuery.refetch();
     },
   });
 
@@ -239,6 +253,7 @@ export default function AdminJobScreeningPage({
         topScore: top,
         confidence: (topCandidate?.confidence ??
           "medium") as SavedScreening["confidence"],
+        currentStep: s.pipelineState?.currentStep,
       };
     });
   }, [screeningsQuery.data, jobs]);
@@ -290,6 +305,7 @@ export default function AdminJobScreeningPage({
             setStep("processing");
             runInternalMutation.mutate(screening.jobId);
           }}
+          onDelete={(id) => deleteScreeningMutation.mutate(id)}
           onStartNew={() => setStep("select_job")}
         />
       )}

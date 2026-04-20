@@ -8,7 +8,38 @@ import {
   Users,
   Target,
   Plus,
+  Trash2,
 } from "lucide-react";
+
+const STEP_LABELS: Record<string, string> = {
+  results: "Results",
+  shortlist: "Shortlist",
+  interview_email: "Interview Invite",
+  interview_manage: "Interview",
+  contract_generate: "Contract Draft",
+  contract_email: "Contract Sent",
+  complete: "Hired",
+};
+
+const STEP_COLORS: Record<string, string> = {
+  results: "bg-gray-500",
+  shortlist: "bg-blue-500",
+  interview_email: "bg-yellow-500",
+  interview_manage: "bg-orange-500",
+  contract_generate: "bg-purple-500",
+  contract_email: "bg-pink-500",
+  complete: "bg-green-500",
+};
+
+const STEP_ORDER = [
+  "results",
+  "shortlist",
+  "interview_email",
+  "interview_manage",
+  "contract_generate",
+  "contract_email",
+  "complete",
+];
 
 export type SavedScreening = {
   id: string;
@@ -18,6 +49,7 @@ export type SavedScreening = {
   candidateCount: number;
   topScore: number;
   confidence: "high" | "medium" | "low";
+  currentStep?: string;
 };
 
 export default function ScreeningHistoryStep({
@@ -25,11 +57,13 @@ export default function ScreeningHistoryStep({
   onView,
   onReRun,
   onStartNew,
+  onDelete,
 }: {
   screenings: SavedScreening[];
   onView: (id: string) => void;
   onReRun: (id: string) => void;
   onStartNew: () => void;
+  onDelete?: (id: string) => void;
 }) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -90,12 +124,57 @@ export default function ScreeningHistoryStep({
                 </span>
               </div>
 
+              {/* Progress Bar */}
+              {s.currentStep && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-[#7C8493]">
+                      {STEP_LABELS[s.currentStep] || s.currentStep}
+                    </span>
+                    <span className="text-[#286ef0] font-semibold">
+                      {Math.round(
+                        ((STEP_ORDER.indexOf(s.currentStep) + 1) /
+                          STEP_ORDER.length) *
+                          100,
+                      )}
+                      %
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${STEP_COLORS[s.currentStep] || "bg-gray-500"}`}
+                      style={{
+                        width: `${((STEP_ORDER.indexOf(s.currentStep) + 1) / STEP_ORDER.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="mt-6 flex items-center justify-between border-t border-gray-50 pt-4">
                 <div className="flex items-center gap-1 text-sm font-bold text-[#25324B]">
                   <Target className="h-4 w-4 text-[#286ef0]" />
-                  Top Match: {s.topScore}%
+                  Top Score: {s.topScore}%
                 </div>
                 <div className="flex gap-2">
+                  {onDelete && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (
+                          confirm(
+                            "Are you sure you want to delete this screening?",
+                          )
+                        ) {
+                          onDelete(s.id);
+                        }
+                      }}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-red-500 transition-colors hover:border-red-500 hover:bg-red-50 hover:text-red-600"
+                      title="Delete Screening"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   <button
                     onClick={() => onReRun(s.id)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-[#7C8493] transition-colors hover:border-[#286ef0] hover:bg-blue-50 hover:text-[#286ef0]"

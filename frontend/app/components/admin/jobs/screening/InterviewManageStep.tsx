@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,9 +19,14 @@ import {
   Star,
 } from "lucide-react";
 
-export type InterviewStatus = "invited" | "confirmed" | "completed" | "no-show" | "rejected";
+export type InterviewStatus =
+  | "invited"
+  | "confirmed"
+  | "completed"
+  | "no-show"
+  | "rejected";
 
-export type InterviewCandidate = {
+export interface InterviewCandidate {
   candidateId: string;
   name: string;
   email: string;
@@ -33,14 +38,45 @@ export type InterviewCandidate = {
   notes?: string;
   rating?: number; // 1-5
   feedback?: string;
-};
+}
 
-const STATUS_CONFIG: Record<InterviewStatus, { label: string; color: string; icon: any }> = {
-  invited: { label: "Invited", color: "bg-blue-100 text-blue-700", icon: Clock },
-  confirmed: { label: "Confirmed", color: "bg-green-100 text-green-700", icon: CheckCircle2 },
-  completed: { label: "Completed", color: "bg-purple-100 text-purple-700", icon: CheckCircle2 },
-  "no-show": { label: "No Show", color: "bg-red-100 text-red-700", icon: XCircle },
-  rejected: { label: "Rejected", color: "bg-gray-100 text-gray-700", icon: XCircle },
+interface InterviewManageStepProps {
+  candidates: InterviewCandidate[];
+  jobTitle: string;
+  onContinue: (selectedIds: string[]) => void;
+  onBack: () => void;
+  onUpdateCandidates?: (candidates: InterviewCandidate[]) => void;
+}
+
+const STATUS_CONFIG: Record<
+  InterviewStatus,
+  { label: string; color: string; icon: any }
+> = {
+  invited: {
+    label: "Invited",
+    color: "bg-blue-100 text-blue-700",
+    icon: Clock,
+  },
+  confirmed: {
+    label: "Confirmed",
+    color: "bg-green-100 text-green-700",
+    icon: CheckCircle2,
+  },
+  completed: {
+    label: "Completed",
+    color: "bg-purple-100 text-purple-700",
+    icon: CheckCircle2,
+  },
+  "no-show": {
+    label: "No Show",
+    color: "bg-red-100 text-red-700",
+    icon: XCircle,
+  },
+  rejected: {
+    label: "Rejected",
+    color: "bg-gray-100 text-gray-700",
+    icon: XCircle,
+  },
 };
 
 export default function InterviewManageStep({
@@ -48,35 +84,44 @@ export default function InterviewManageStep({
   jobTitle,
   onContinue,
   onBack,
-}: {
-  candidates: InterviewCandidate[];
-  jobTitle: string;
-  onContinue: (selectedIds: string[]) => void; // Move to contract for selected
-  onBack: () => void;
-}) {
+  onUpdateCandidates,
+}: InterviewManageStepProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [localCandidates, setLocalCandidates] = useState(candidates);
   const [isSaving, setIsSaving] = useState(false);
 
-  const updateCandidate = (id: string, updates: Partial<InterviewCandidate>) => {
-    setLocalCandidates((prev) =>
-      prev.map((c) => (c.candidateId === id ? { ...c, ...updates } : c))
-    );
+  // Sync local state with parent candidates on mount/update
+  useEffect(() => {
+    setLocalCandidates(candidates);
+  }, [candidates]);
+
+  const updateCandidate = (
+    id: string,
+    updates: Partial<InterviewCandidate>,
+  ) => {
+    setLocalCandidates((prev) => {
+      const updated = prev.map((c) =>
+        c.candidateId === id ? { ...c, ...updates } : c,
+      );
+      // Notify parent of change for auto-save
+      onUpdateCandidates?.(updated);
+      return updated;
+    });
   };
 
   const handleStatusChange = (id: string, status: InterviewStatus) => {
-    updateCandidate(id, { status });
+    updateCandidate(id, { status }); // Save all changes (now handled by parent auto-save, but keep for button feedback)
   };
 
-  const handleSaveNotes = async (id: string) => {
+  const handleSave = async () => {
     setIsSaving(true);
-    // API call would go here
-    await new Promise((r) => setTimeout(r, 500));
+    onUpdateCandidates?.(localCandidates);
+    await new Promise((r) => setTimeout(r, 300));
     setIsSaving(false);
   };
 
   const confirmedForContract = localCandidates.filter(
-    (c) => c.status === "completed" && (c.rating || 0) >= 4
+    (c) => c.status === "completed" && (c.rating || 0) >= 4,
   );
 
   return (
@@ -99,13 +144,17 @@ export default function InterviewManageStep({
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {Object.entries(STATUS_CONFIG).map(([status, config]) => {
-          const count = localCandidates.filter((c) => c.status === status).length;
+          const count = localCandidates.filter(
+            (c) => c.status === status,
+          ).length;
           const Icon = config.icon;
           return (
             <div
               key={status}
               className={`rounded-xl border p-3 ${
-                count > 0 ? "border-gray-200 bg-white" : "border-gray-100 bg-gray-50"
+                count > 0
+                  ? "border-gray-200 bg-white"
+                  : "border-gray-100 bg-gray-50"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -129,7 +178,9 @@ export default function InterviewManageStep({
             <div
               key={c.candidateId}
               className={`rounded-xl border transition-all ${
-                isExpanded ? "border-[#286ef0] shadow-md" : "border-gray-200 bg-white"
+                isExpanded
+                  ? "border-[#286ef0] shadow-md"
+                  : "border-gray-200 bg-white"
               }`}
             >
               {/* Summary Row */}
@@ -139,7 +190,9 @@ export default function InterviewManageStep({
               >
                 <div
                   className={`flex h-10 w-10 items-center justify-center rounded-lg font-bold ${
-                    c.rank === 1 ? "bg-amber-100 text-amber-700" : "bg-gray-100 text-[#25324B]"
+                    c.rank === 1
+                      ? "bg-amber-100 text-amber-700"
+                      : "bg-gray-100 text-[#25324B]"
                   }`}
                 >
                   #{c.rank}
@@ -174,33 +227,46 @@ export default function InterviewManageStep({
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {/* Status Update */}
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-[#25324B]">Update Status</label>
+                      <label className="text-sm font-semibold text-[#25324B]">
+                        Update Status
+                      </label>
                       <div className="flex flex-wrap gap-2">
-                        {Object.entries(STATUS_CONFIG).map(([status, config]) => (
-                          <button
-                            key={status}
-                            onClick={() => handleStatusChange(c.candidateId, status as InterviewStatus)}
-                            className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                              c.status === status
-                                ? config.color
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {config.label}
-                          </button>
-                        ))}
+                        {Object.entries(STATUS_CONFIG).map(
+                          ([status, config]) => (
+                            <button
+                              key={status}
+                              onClick={() =>
+                                handleStatusChange(
+                                  c.candidateId,
+                                  status as InterviewStatus,
+                                )
+                              }
+                              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                c.status === status
+                                  ? config.color
+                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                              }`}
+                            >
+                              {config.label}
+                            </button>
+                          ),
+                        )}
                       </div>
                     </div>
 
                     {/* Rating (for completed) */}
                     {c.status === "completed" && (
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-[#25324B]">Interview Rating</label>
+                        <label className="text-sm font-semibold text-[#25324B]">
+                          Interview Rating
+                        </label>
                         <div className="flex items-center gap-1">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <button
                               key={star}
-                              onClick={() => updateCandidate(c.candidateId, { rating: star })}
+                              onClick={() =>
+                                updateCandidate(c.candidateId, { rating: star })
+                              }
                               className={`p-1 ${(c.rating || 0) >= star ? "text-amber-400" : "text-gray-300"}`}
                             >
                               <Star className="h-5 w-5 fill-current" />
@@ -218,7 +284,11 @@ export default function InterviewManageStep({
                       </label>
                       <textarea
                         value={c.notes || ""}
-                        onChange={(e) => updateCandidate(c.candidateId, { notes: e.target.value })}
+                        onChange={(e) =>
+                          updateCandidate(c.candidateId, {
+                            notes: e.target.value,
+                          })
+                        }
                         rows={3}
                         placeholder="Add notes about the interview..."
                         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-[#286ef0]"
@@ -252,7 +322,9 @@ export default function InterviewManageStep({
             Back
           </button>
           <button
-            onClick={() => onContinue(confirmedForContract.map((c) => c.candidateId))}
+            onClick={() =>
+              onContinue(confirmedForContract.map((c) => c.candidateId))
+            }
             disabled={confirmedForContract.length === 0}
             className="inline-flex items-center gap-2 rounded-lg bg-[#286ef0] px-6 py-2 text-sm font-bold text-white shadow-md shadow-blue-100 hover:bg-[#1f5fe0] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >

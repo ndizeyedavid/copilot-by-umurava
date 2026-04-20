@@ -586,6 +586,9 @@ export default function ScreeningResultsPage() {
             setStep("contract_generate");
           }}
           onBack={() => setStep("interview_email")}
+          onUpdateCandidates={(updated) => {
+            setInterviewCandidates(updated);
+          }}
         />
       )}
 
