@@ -13,5 +13,13 @@ screeningRouter.post(
 );
 screeningRouter.put("/:screeningId", screeningController.updateScreening);
 screeningRouter.delete("/:screeningId", screeningController.deleteScreening);
+screeningRouter.post(
+  "/:screeningId/interview-email",
+  screeningController.sendInterviewEmails,
+);
+screeningRouter.post(
+  "/:screeningId/contract-email",
+  screeningController.sendContractEmails,
+);
 
 export default screeningRouter;

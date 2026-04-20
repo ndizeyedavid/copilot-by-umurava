@@ -25,6 +25,69 @@ const screeningSchema = new Schema<IScreening>(
       required: true,
     },
     comparisonSummary: { type: String },
+    pipelineState: {
+      type: {
+        currentStep: {
+          type: String,
+          enum: [
+            "results",
+            "shortlist",
+            "interview_email",
+            "interview_manage",
+            "contract_generate",
+            "contract_email",
+            "complete",
+          ],
+          default: "results",
+        },
+        shortlistedIds: { type: [String], default: [] },
+        interviewCandidates: {
+          type: [
+            {
+              candidateId: String,
+              name: String,
+              email: String,
+              rank: Number,
+              matchScore: Number,
+              status: {
+                type: String,
+                enum: [
+                  "invited",
+                  "confirmed",
+                  "completed",
+                  "no-show",
+                  "rejected",
+                ],
+              },
+              scheduledDate: String,
+              scheduledTime: String,
+              notes: String,
+              rating: Number,
+            },
+          ],
+          default: [],
+        },
+        contractCandidates: {
+          type: [
+            {
+              candidateId: String,
+              name: String,
+              email: String,
+              position: String,
+              contractText: String,
+              status: {
+                type: String,
+                enum: ["pending", "sent", "signed", "declined"],
+                default: "pending",
+              },
+            },
+          ],
+          default: [],
+        },
+        completedHires: { type: [String], default: [] },
+      },
+      default: null,
+    },
   },
   { timestamps: true },
 );

@@ -75,6 +75,7 @@ const screeningController = {
       const updatedScreening = await Screening.findByIdAndUpdate(
         screeningId,
         payload,
+        { new: true, runValidators: true },
       );
 
       if (!updatedScreening)
@@ -478,6 +479,162 @@ const screeningController = {
     } catch (error: any) {
       return res.status(500).json({
         message: "AI screening failed",
+        error: error.message,
+      });
+    }
+  },
+
+  async sendInterviewEmails(req: Request, res: Response) {
+    try {
+      const { screeningId } = req.params;
+      const {
+        candidates,
+        subject,
+        body,
+        interviewType,
+        date,
+        time,
+        duration,
+        location,
+      } = req.body;
+
+      // Import email service and Jobs model
+      const { sendMail } = await import("../services/email.service");
+      const { default: Jobs } = await import("../models/jobs.model");
+      const Screening = await import("../models/screening.model").then(
+        (m) => m.default,
+      );
+
+      // Fetch screening to get jobId
+      const screening = await Screening.findById(screeningId);
+      let jobTitle = "Position";
+      if (screening) {
+        const job = await Jobs.findById(screening.jobId);
+        if (job) {
+          jobTitle = job.title;
+        }
+      }
+
+      const results = { sent: 0, failed: 0, errors: [] as string[] };
+
+      for (const candidate of candidates) {
+        try {
+          // Replace template variables
+          const personalizedSubject = subject
+            .replace(/{{candidateName}}/g, candidate.name)
+            .replace(/{{jobTitle}}/g, jobTitle);
+
+          const personalizedBody = body
+            .replace(/{{candidateName}}/g, candidate.name)
+            .replace(/{{jobTitle}}/g, jobTitle)
+            .replace(/{{interviewDate}}/g, date)
+            .replace(/{{interviewTime}}/g, time)
+            .replace(/{{duration}}/g, duration)
+            .replace(/{{location}}/g, location || "TBD");
+
+          await sendMail({
+            to: candidate.email,
+            subject: personalizedSubject,
+            html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #286ef0; color: white; padding: 20px; text-align: center; }
+    .content { background: #f9f9f9; padding: 20px; border-radius: 5px; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Interview Invitation</h1>
+    </div>
+    <div class="content">
+      <pre style="white-space: pre-wrap; font-family: inherit;">${personalizedBody}</pre>
+    </div>
+    <div class="footer">
+      <p>Sent by Umurava Hiring Team</p>
+    </div>
+  </div>
+</body>
+</html>`,
+          });
+
+          results.sent++;
+        } catch (error: any) {
+          results.failed++;
+          results.errors.push(
+            `Failed to send to ${candidate.email}: ${error.message}`,
+          );
+        }
+      }
+
+      return res.status(200).json({
+        message: `Interview invitation emails sent`,
+        sent: results.sent,
+        failed: results.failed,
+        errors: results.errors.length > 0 ? results.errors : undefined,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        message: "Failed to send interview emails",
+        error: error.message,
+      });
+    }
+  },
+
+  async sendContractEmails(req: Request, res: Response) {
+    try {
+      const { screeningId } = req.params;
+      const { candidateId, email, subject, body, contractText } = req.body;
+
+      // Import email service
+      const { sendMail } = await import("../services/email.service");
+
+      await sendMail({
+        to: email,
+        subject,
+        html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+    .content { background: #f9f9f9; padding: 20px; border-radius: 5px; }
+    .contract { background: white; padding: 20px; border: 1px solid #ddd; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Employment Contract</h1>
+    </div>
+    <div class="content">
+      <pre style="white-space: pre-wrap; font-family: inherit;">${body}</pre>
+      <div class="contract">
+        <h3>Contract Terms:</h3>
+        <pre style="white-space: pre-wrap; font-family: inherit;">${contractText}</pre>
+      </div>
+    </div>
+    <div class="footer">
+      <p>Sent by Umurava Hiring Team</p>
+    </div>
+  </div>
+</body>
+</html>`,
+      });
+
+      return res.status(200).json({
+        message: `Contract email sent to ${email}`,
+        sent: 1,
+      });
+    } catch (error: any) {
+      return res.status(500).json({
+        message: "Failed to send contract email",
         error: error.message,
       });
     }

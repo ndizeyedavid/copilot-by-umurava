@@ -538,3 +538,32 @@ export const sendApplicationConfirmation = async (
     console.error("Failed to send confirmation email:", error);
   }
 };
+
+// Generic send mail function
+export async function sendMail(options: {
+  to: string;
+  subject: string;
+  html: string;
+  from?: string;
+}) {
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.ENABLE_EMAILS !== "true"
+  ) {
+    console.log(
+      "Email skipped in development mode:",
+      options.to,
+      options.subject,
+    );
+    return;
+  }
+
+  await transporter.sendMail({
+    from:
+      options.from ||
+      `"${ENV.email_from || "Umurava Team"}" <${ENV.smtp_user}>`,
+    to: options.to,
+    subject: options.subject,
+    html: options.html,
+  });
+}
