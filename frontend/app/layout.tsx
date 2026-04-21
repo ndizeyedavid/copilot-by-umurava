@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { cn } from "@/lib/utils";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import GoogleOneTap from "./components/GoogleOneTap";
+import ProgressBar from "./components/ProgressBar";
 import Providers from "./providers";
 import "@aejkatappaja/phantom-ui/ssr.css";
 
@@ -55,6 +56,7 @@ export default function RootLayout({
           >
             <Providers>
               {/* <GoogleOneTap /> */}
+              <ProgressBar />
               {children}
             </Providers>
           </GoogleOAuthProvider>
