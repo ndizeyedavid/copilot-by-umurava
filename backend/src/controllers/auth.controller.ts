@@ -161,7 +161,7 @@ const authController = {
         photos: payload.picture ? [{ value: payload.picture }] : [],
       };
 
-      const resolvedRole: UserRole = role || "talent";
+      const resolvedRole: UserRole = role || "admin";
       const { user, isNew } = await findOrCreateUser(
         googleProfile,
         resolvedRole,

@@ -9,6 +9,7 @@ import ProgressBar from "./components/ProgressBar";
 import Providers from "./providers";
 import "@aejkatappaja/phantom-ui/ssr.css";
 import { Suspense } from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -65,6 +66,7 @@ export default function RootLayout({
           </GoogleOAuthProvider>
         </ThemeProvider>
       </body>
+      <Analytics />
     </html>
   );
 }
