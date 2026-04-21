@@ -115,17 +115,20 @@ export default function AdminJobEditForm() {
           ? raw.requirements.map((r) => ({ value: String(r ?? "") }))
           : [{ value: "" }],
       weights: {
-        skills: Number(raw?.weights?.skills ?? 40),
-        experience: Number(raw?.weights?.experience ?? 35),
-        education: Number(raw?.weights?.education ?? 25),
+        // Convert DB weights (0-1) to UI weights (0-100)
+        skills: Math.round(Number(raw?.weights?.skills ?? 0.4) * 100),
+        experience: Math.round(Number(raw?.weights?.experience ?? 0.35) * 100),
+        education: Math.round(Number(raw?.weights?.education ?? 0.25) * 100),
       },
       deadline: isoToDateInput(raw?.deadline),
       jobType: (raw?.jobType ?? "full-time") as FormValues["jobType"],
-      locationType: (raw?.locationType ?? "remote") as FormValues["locationType"],
+      locationType: (raw?.locationType ??
+        "remote") as FormValues["locationType"],
       status: (raw?.status ?? "open") as FormValues["status"],
       salary: {
         amount: Number(raw?.salary?.amount ?? 0),
-        currency: (raw?.salary?.currency ?? "USD") as FormValues["salary"]["currency"],
+        currency: (raw?.salary?.currency ??
+          "USD") as FormValues["salary"]["currency"],
       },
       benefits:
         Array.isArray(raw?.benefits) && raw.benefits.length > 0
@@ -187,7 +190,9 @@ export default function AdminJobEditForm() {
     }
 
     setValue("weights.skills", clamp(next.skills), { shouldDirty: true });
-    setValue("weights.experience", clamp(next.experience), { shouldDirty: true });
+    setValue("weights.experience", clamp(next.experience), {
+      shouldDirty: true,
+    });
     setValue("weights.education", clamp(next.education), { shouldDirty: true });
   };
 
@@ -198,7 +203,9 @@ export default function AdminJobEditForm() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "jobs"] });
-      await queryClient.invalidateQueries({ queryKey: ["admin", "job", jobId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin", "job", jobId],
+      });
       toast.success("Job updated");
       router.push(`/admin/jobs/${jobId}`);
     },
@@ -215,9 +222,10 @@ export default function AdminJobEditForm() {
         .map((r) => r.value.trim())
         .filter(Boolean),
       weights: {
-        skills: Number(values.weights.skills),
-        experience: Number(values.weights.experience),
-        education: Number(values.weights.education),
+        // Convert UI weights (0-100) to DB weights (0-1)
+        skills: Number(values.weights.skills) / 100,
+        experience: Number(values.weights.experience) / 100,
+        education: Number(values.weights.education) / 100,
       },
       deadline: new Date(values.deadline).toISOString(),
       jobType: values.jobType,
@@ -290,7 +298,9 @@ export default function AdminJobEditForm() {
                   <input
                     type="date"
                     className={`${fieldClass} pl-10`}
-                    {...register("deadline", { required: "Deadline is required" })}
+                    {...register("deadline", {
+                      required: "Deadline is required",
+                    })}
                   />
                 </div>
                 {errors.deadline?.message && (
@@ -338,7 +348,10 @@ export default function AdminJobEditForm() {
                 <label className="mb-1 block text-sm font-semibold text-[#25324B]">
                   Job Type
                 </label>
-                <select className={fieldClass} {...register("jobType", { required: true })}>
+                <select
+                  className={fieldClass}
+                  {...register("jobType", { required: true })}
+                >
                   <option value="full-time">Full-time</option>
                   <option value="part-time">Part-time</option>
                 </select>
@@ -362,7 +375,10 @@ export default function AdminJobEditForm() {
                 <label className="mb-1 block text-sm font-semibold text-[#25324B]">
                   Status
                 </label>
-                <select className={fieldClass} {...register("status", { required: true })}>
+                <select
+                  className={fieldClass}
+                  {...register("status", { required: true })}
+                >
                   <option value="open">Open</option>
                   <option value="closed">Closed</option>
                   <option value="draft">Draft</option>
@@ -380,7 +396,10 @@ export default function AdminJobEditForm() {
                     {...register("salary.amount", {
                       required: "Amount is required",
                       valueAsNumber: true,
-                      min: { value: 1, message: "Amount must be greater than 0" },
+                      min: {
+                        value: 1,
+                        message: "Amount must be greater than 0",
+                      },
                     })}
                     placeholder="Amount"
                   />
@@ -545,7 +564,9 @@ export default function AdminJobEditForm() {
 
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#25324B]">Benefits</p>
+                  <p className="text-sm font-semibold text-[#25324B]">
+                    Benefits
+                  </p>
                   <button
                     type="button"
                     onClick={() => benefitsArray.append({ value: "" })}

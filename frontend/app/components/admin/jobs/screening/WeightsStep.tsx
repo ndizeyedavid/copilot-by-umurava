@@ -86,7 +86,24 @@ export default function WeightsStep({
   onContinue: (weights: Weights) => void;
   onBack: () => void;
 }) {
-  const [weights, setWeights] = useState<Weights>(initialWeights);
+  // Convert DB weights (0-1) to UI weights (0-100) for display
+  const dbToUiWeights = (dbWeights: Weights): Weights => ({
+    skills: Math.round(dbWeights.skills * 100),
+    experience: Math.round(dbWeights.experience * 100),
+    education: Math.round(dbWeights.education * 100),
+  });
+
+  // Convert UI weights (0-100) to DB weights (0-1) for saving
+  const uiToDbWeights = (uiWeights: Weights): Weights => ({
+    skills: uiWeights.skills / 100,
+    experience: uiWeights.experience / 100,
+    education: uiWeights.education / 100,
+  });
+
+  const [weights, setWeights] = useState<Weights>(() => {
+    const defaultWeights = { skills: 50, experience: 30, education: 20 };
+    return initialWeights ? dbToUiWeights(initialWeights) : defaultWeights;
+  });
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -289,7 +306,7 @@ export default function WeightsStep({
                   education: weights.education / 100,
                 },
               });
-              onContinue(weights);
+              onContinue(uiToDbWeights(weights));
             } catch (err) {
               console.error("Failed to update job weights:", err);
               alert("Failed to save weights. Please try again.");

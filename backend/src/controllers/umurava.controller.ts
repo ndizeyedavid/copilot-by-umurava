@@ -187,7 +187,8 @@ function buildDummyTalents(count = 30): UmuravaTalent[] {
         ]),
         startDate: start,
         endDate: end,
-        description: "Built products, shipped features, collaborated cross-functionally.",
+        description:
+          "Built products, shipped features, collaborated cross-functionally.",
         technologies: Array.from({ length: int(3, 6) }).map(() => pick(tech)),
         IsCurrent: current,
       };
@@ -219,7 +220,8 @@ function buildDummyTalents(count = 30): UmuravaTalent[] {
 
     const projects = Array.from({ length: int(1, 3) }).map((__, p) => ({
       name: `Project ${p + 1}`,
-      description: "Portfolio project with real-world constraints and delivery.",
+      description:
+        "Portfolio project with real-world constraints and delivery.",
       technologies: Array.from({ length: int(2, 5) }).map(() => pick(tech)),
       role: pick(["Owner", "Contributor", "Lead"]),
       link: "https://example.com",
@@ -253,7 +255,9 @@ function buildDummyTalents(count = 30): UmuravaTalent[] {
 export const umuravaController = {
   async getDummyTalents(req: Request, res: Response) {
     const count = Number(req.query.count ?? 30);
-    const safeCount = Number.isFinite(count) ? Math.min(Math.max(count, 1), 100) : 30;
+    const safeCount = Number.isFinite(count)
+      ? Math.min(Math.max(count, 1), 100)
+      : 30;
 
     const talents = buildDummyTalents(safeCount);
     return res.status(200).json({
