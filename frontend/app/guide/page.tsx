@@ -7,38 +7,43 @@ export default function GuidePage() {
     {
       number: "01",
       title: "Create Your Account",
-      description: "Sign up as an HR admin and complete your company profile. Verify your email to activate all features.",
+      description:
+        "Sign up as an HR admin and complete your company profile. Verify your email to activate all features.",
       action: "Get Started",
-      link: "/admin/auth/login"
+      link: "/admin/auth/login",
     },
     {
       number: "02",
       title: "Post Your First Job",
-      description: "Click 'New Job' and fill in the details. Add requirements, set the deadline, and define your screening criteria.",
+      description:
+        "Click 'New Job' and fill in the details. Add requirements, set the deadline, and define your screening criteria.",
       action: "Create Job",
-      link: "/admin/jobs"
+      link: "/admin/jobs",
     },
     {
       number: "03",
       title: "Configure AI Screening",
-      description: "Set weights for skills, experience, and education. Our AI will automatically score incoming applications.",
+      description:
+        "Set weights for skills, experience, and education. Our AI will automatically score incoming applications.",
       action: "Learn More",
-      link: "/advice"
+      link: "/advice",
     },
     {
       number: "04",
       title: "Review Candidates",
-      description: "Access your dashboard to see AI-ranked candidates. Review top matches and advance promising applicants.",
+      description:
+        "Access your dashboard to see AI-ranked candidates. Review top matches and advance promising applicants.",
       action: "Go to Dashboard",
-      link: "/admin"
+      link: "/admin",
     },
     {
       number: "05",
       title: "Manage the Pipeline",
-      description: "Move candidates through screening stages, schedule interviews, and make data-driven hiring decisions.",
+      description:
+        "Move candidates through screening stages, schedule interviews, and make data-driven hiring decisions.",
       action: "Start Screening",
-      link: "/admin/screening"
-    }
+      link: "/admin/screening",
+    },
   ];
 
   const tips = [
@@ -46,7 +51,7 @@ export default function GuidePage() {
     "Set realistic screening weights - 100% on one criterion may miss great candidates",
     "Respond to top candidates within 24-48 hours",
     "Use the analytics dashboard to identify bottlenecks in your process",
-    "Regularly review and update your screening criteria based on successful hires"
+    "Regularly review and update your screening criteria based on successful hires",
   ];
 
   return (
@@ -60,7 +65,7 @@ export default function GuidePage() {
               Getting Started <span className="text-[#286ef0]">Guide</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl">
-              Follow these simple steps to transform your hiring process with 
+              Follow these simple steps to transform your hiring process with
               AI-powered talent acquisition.
             </p>
           </div>
@@ -72,10 +77,16 @@ export default function GuidePage() {
             <div className="space-y-8">
               {steps.map((step, index) => (
                 <div key={index} className="flex gap-8 items-start">
-                  <div className="text-5xl font-bold text-[#286ef0]/20">{step.number}</div>
+                  <div className="text-5xl font-bold text-[#286ef0]/20">
+                    {step.number}
+                  </div>
                   <div className="flex-1 bg-white p-8 border border-gray-100 rounded-lg hover:shadow-md transition-shadow">
-                    <h3 className="text-2xl font-semibold text-[#25324B] mb-3">{step.title}</h3>
-                    <p className="text-gray-600 mb-4 leading-relaxed">{step.description}</p>
+                    <h3 className="text-2xl font-semibold text-[#25324B] mb-3">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 leading-relaxed">
+                      {step.description}
+                    </p>
                     <a
                       href={step.link}
                       className="inline-flex items-center gap-2 text-[#286ef0] font-semibold hover:gap-3 transition-all"
@@ -93,12 +104,14 @@ export default function GuidePage() {
         {/* Pro Tips */}
         <section className="py-16 bg-[#f8f8fd]">
           <div className="mx-[122px]">
-            <h2 className="text-3xl font-bold text-[#25324B] mb-8">Pro Tips for Success</h2>
+            <h2 className="text-3xl font-bold text-[#25324B] mb-8">
+              Pro Tips for Success
+            </h2>
             <div className="bg-white p-8 rounded-lg shadow-sm">
               <ul className="space-y-4">
                 {tips.map((tip, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-[#286ef0] mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-[#286ef0] mt-0.5 shrink-0" />
                     <span className="text-gray-700">{tip}</span>
                   </li>
                 ))}

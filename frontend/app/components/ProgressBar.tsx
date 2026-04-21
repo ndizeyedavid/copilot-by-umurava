@@ -8,7 +8,7 @@ import "nprogress/nprogress.css";
 NProgress.configure({
   showSpinner: false,
   speed: 400,
-  minimum: 0.1,
+  minimum: 0.7,
 });
 
 export default function ProgressBar() {

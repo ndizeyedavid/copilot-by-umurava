@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { stripHtmlToText } from "./SafeHtml";
+import Link from "next/link";
 
 type ApiJob = {
   _id: string;
@@ -68,9 +69,12 @@ export default function FeaturedJobsSection() {
           ) : featuredJobs.length === 0 ? (
             <div className="col-span-4 py-12 text-center text-sm font-semibold text-gray-500">
               No active job postings.{" "}
-              <a href="/admin/jobs" className="text-[#286ef0] hover:underline">
+              <Link
+                href="/admin/jobs"
+                className="text-[#286ef0] hover:underline"
+              >
                 Create your first job posting
-              </a>
+              </Link>
             </div>
           ) : (
             featuredJobs.map((job) => (
@@ -83,11 +87,11 @@ export default function FeaturedJobsSection() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center overflow-hidden">
                     <Image
-                      src="/images/companies/dummy.png"
+                      src="/images/companies/umurava.png"
                       alt="Company"
                       width={32}
                       height={32}
-                      className="object-contain"
+                      className="object-cover w-full h-full"
                     />
                   </div>
                   <span className="px-3 py-1 text-xs font-medium text-[#4F46E5] border border-[#4F46E5] rounded">

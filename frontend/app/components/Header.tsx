@@ -22,23 +22,25 @@ export default function Header() {
       }`}
     >
       <div className="flex items-center gap-8">
-        <Image
-          src="/images/logo/logo.svg"
-          alt="Copilot By Umurava Logo"
-          width={110}
-          height={34}
-        />
+        <Link href="/">
+          <Image
+            src="/images/logo/logo.svg"
+            alt="Copilot By Umurava Logo"
+            width={110}
+            height={34}
+          />
+        </Link>
 
         <nav className="flex items-center gap-6 text-sm text-gray-700">
-          <a href="/admin" className="hover:text-gray-900">
+          <Link href="/admin" className="hover:text-gray-900">
             Dashboard
-          </a>
-          <a href="/admin/jobs" className="hover:text-gray-900">
+          </Link>
+          <Link href="/admin/jobs" className="hover:text-gray-900">
             Jobs
-          </a>
-          <a href="/admin/screening" className="hover:text-gray-900">
+          </Link>
+          <Link href="/admin/screening" className="hover:text-gray-900">
             Screening
-          </a>
+          </Link>
         </nav>
       </div>
 
@@ -47,14 +49,14 @@ export default function Header() {
           href="/admin/auth/login"
           className="text-sm font-bold text-[#286ef0] hover:text-[#4338CA]"
         >
-          Admin Login
+          Login
         </Link>
-        <a
+        <Link
           href="/admin"
           className="px-5 py-2.5 text-sm font-medium text-white bg-[#286ef0] hover:bg-[#2566de]"
         >
-          Go to Dashboard
-        </a>
+          Dashboard
+        </Link>
       </div>
     </header>
   );

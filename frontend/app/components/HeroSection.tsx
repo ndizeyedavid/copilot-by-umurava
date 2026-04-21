@@ -11,11 +11,11 @@ export default function HeroSection() {
         {/* Left content */}
         <div className="max-w-2xl w-full">
           <h1 className="text-[70px] font-bold text-[#25324B] leading-tight">
-            AI-Powered
+            Screen
             <br />
-            Talent
+            Applications
             <br />
-            <span className="text-[#286ef0]">Acquisition</span>
+            With <span className="text-[#286ef0]">Ease</span>
           </h1>
 
           {/* Blue underline decoration */}
@@ -36,7 +36,7 @@ export default function HeroSection() {
               href="/admin"
               className="bg-[#286ef0] hover:bg-[#2566de] text-white px-8 py-4 text-sm font-semibold"
             >
-              Access Admin Dashboard
+              Access Dashboard
             </a>
             <a
               href="/admin/jobs"
@@ -49,18 +49,18 @@ export default function HeroSection() {
           {/* Stats */}
           <div className="mt-8 flex items-center gap-8">
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#286ef0]">500+</p>
-              <p className="text-sm text-gray-500">Companies Hiring</p>
-            </div>
-            <div className="h-10 w-px bg-gray-200" />
-            <div className="text-center">
               <p className="text-2xl font-bold text-[#286ef0]">10K+</p>
-              <p className="text-sm text-gray-500">Talents Screened</p>
+              <p className="text-sm text-gray-500">Talent screening capacity</p>
             </div>
             <div className="h-10 w-px bg-gray-200" />
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#286ef0]">85%</p>
+              <p className="text-2xl font-bold text-[#286ef0]">97%</p>
               <p className="text-sm text-gray-500">Faster Hiring</p>
+            </div>
+            <div className="h-10 w-px bg-gray-200" />
+            <div className="text-center">
+              <p className="text-2xl font-bold text-[#286ef0]">5s</p>
+              <p className="text-sm text-gray-500">Screening latency</p>
             </div>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function HeroSection() {
             />
           </div>
 
-          <div className="w-[283px] h-[731px] bg-[#f8f8fd] absolute p-4 bottom-[-460px] right-[-100px] z-20 rotate-50" />
+          <div className="w-[283px] h-[731px] bg-[#f8f8fd] absolute p-4 bottom-[-500px] right-[-100px] z-20 rotate-50" />
         </div>
       </div>
     </section>

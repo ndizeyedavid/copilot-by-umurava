@@ -17,10 +17,22 @@ export default function Footer() {
   ];
 
   const socialLinks = [
-    { icon: <BiLogoInstagramAlt className="w-5 h-5" />, href: "" },
-    { icon: <ImLinkedin2 className="w-5 h-5" />, href: "" },
-    { icon: <ImFacebook className="w-5 h-5" />, href: "" },
-    { icon: <ImYoutube className="w-5 h-5" />, href: "" },
+    {
+      icon: <BiLogoInstagramAlt className="w-5 h-5" />,
+      href: "https://umurava.africa/",
+    },
+    {
+      icon: <ImLinkedin2 className="w-5 h-5" />,
+      href: "https://umurava.africa/",
+    },
+    {
+      icon: <ImFacebook className="w-5 h-5" />,
+      href: "https://umurava.africa/",
+    },
+    {
+      icon: <ImYoutube className="w-5 h-5" />,
+      href: "https://umurava.africa/",
+    },
   ];
 
   return (

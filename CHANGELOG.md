@@ -2,6 +2,54 @@
 
 All notable changes made during admin dashboard refactor + auth improvements.
 
+## 21 / 04 / 2026
+
+### Added
+
+- Landing page completely refactored for HR admin focus.
+  - `frontend/app/components/HeroSection.tsx` - New hero: "AI-Powered Talent Acquisition" with admin dashboard CTAs.
+  - `frontend/app/components/Header.tsx` - Admin navigation (Dashboard, Jobs, Screening) + admin login links.
+  - `frontend/app/components/CategorySection.tsx` - 8 admin features: Job Management, AI Screening, Talent Pool, Analytics, Smart Search, Compliance, Resume Parser, Team Settings.
+  - `frontend/app/components/FeaturedJobsSection.tsx` - "Active Job Postings" section linking to `/admin/jobs`.
+  - `frontend/app/components/CtaSection.tsx` - "Transform Your Hiring Today" CTA.
+
+- Footer pages created with full content.
+  - `/about/companies` - Partner companies showcase with stats.
+  - `/terms` - Terms of Service for HR admin platform.
+  - `/advice` - Hiring best practices and AI screening tips.
+  - `/privacy-policy` - GDPR-compliant privacy policy.
+  - `/help-docs` - Documentation hub with FAQs.
+  - `/guide` - 5-step getting started guide for new HR admins.
+  - `/updates` - Product changelog and upcoming features.
+  - `/contact-us` - Contact form with support info.
+
+- Admin profile enhancements.
+  - `frontend/app/admin/profile/page.tsx` - Phone number editing with `react-phone-number-input`.
+  - `backend/src/controllers/auth.controller.ts` - Backend support for `phone` field in profile updates.
+
+- NProgress page loading indicator.
+  - `frontend/app/components/ProgressBar.tsx` - Global progress bar component.
+  - `frontend/app/layout.tsx` - Integrated ProgressBar into root layout.
+
+### Changed
+
+- AdminSidebar dynamic data integration.
+  - `frontend/app/components/admin/AdminSidebar.tsx` - Fetches admin profile from `/auth/me` API.
+  - Dynamic name, role, and profile picture display.
+
+- AdminRecentApplicationsTable talent data display.
+  - `frontend/app/components/admin/dashboard/AdminRecentApplicationsTable.tsx` - Shows talent name, location, and experience from API.
+  - Fixed experience rendering to handle array/string types.
+
+- Screening weights UI/DB conversion.
+  - `frontend/app/components/admin/jobs/screening/WeightsStep.tsx` - Converts DB decimals (0-1) to UI percentages (0-100).
+  - `frontend/app/components/admin/jobs/AdminJobEditForm.tsx` - Same conversion logic for edit form.
+
+### Fixed
+
+- Runtime error in `AdminRecentApplicationsTable.tsx` - Object rendering issue with talent.experience field.
+- AdminSidebar crash on refresh - Proper handling of nested API response data with optional chaining.
+
 ## 17 / 04 / 2026
 
 ### Added

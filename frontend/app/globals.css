@@ -170,3 +170,7 @@ ol {
   list-style: decimal;
   margin: 2px 40px !important;
 }
+
+#nprogress .bar {
+  height: 6px !important;
+}

@@ -57,7 +57,7 @@ export default function UserDetailsForm({
       {/* Profile Picture Upload */}
       <div className="flex flex-col items-center mb-6">
         <div className="relative group">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#286ef0] to-[#5c95ff] p-1">
+          <div className="w-24 h-24 rounded-full bg-linear-to-tr from-[#286ef0] to-[#5c95ff] p-1">
             {pictureUrl ? (
               <div className="w-full h-full rounded-full bg-white overflow-hidden">
                 <img

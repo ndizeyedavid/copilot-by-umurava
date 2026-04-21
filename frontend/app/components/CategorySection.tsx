@@ -51,8 +51,8 @@ const features: Feature[] = [
     link: "/admin",
   },
   {
-    name: "Compliance",
-    description: "GDPR & data protection",
+    name: "Security",
+    description: "Google One-tap Signin",
     icon: <Shield className="w-6 h-6" />,
     link: "/admin/settings",
   },
@@ -63,8 +63,8 @@ const features: Feature[] = [
     link: "/admin",
   },
   {
-    name: "Team Settings",
-    description: "Manage admin access",
+    name: "Access Settings",
+    description: "View and manage device sessions",
     icon: <Settings className="w-6 h-6" />,
     link: "/admin/settings",
   },
@@ -72,7 +72,7 @@ const features: Feature[] = [
 
 export default function CategorySection() {
   return (
-    <section className="py-16">
+    <section className="py-16 bg-white">
       <div className="mx-[122px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
