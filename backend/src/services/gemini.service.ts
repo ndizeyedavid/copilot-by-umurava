@@ -68,20 +68,180 @@ export interface ScreeningResult {
   comparisonSummary: string;
 }
 
-const DEFAULT_WEIGHTS = {
-  skills: 0.4,
-  experience: 0.35,
-  education: 0.25,
-};
-
 export async function evaluateCandidates(
   job: JobData,
   candidates: CandidateData[],
 ): Promise<ScreeningResult> {
-  const weights = job.weights || DEFAULT_WEIGHTS;
+  const topRequirements = (
+    Array.isArray(job.requirements) ? job.requirements : []
+  )
+    .filter(Boolean)
+    .map((r) => String(r).trim())
+    .filter(Boolean)
+    .slice(0, 5);
 
-  const prompt = buildPrompt(job, candidates, weights);
+  const concurrency = Number(process.env.SCREENING_AI_CONCURRENCY ?? 10);
 
+  const stage1 = await mapWithConcurrency(
+    candidates,
+    Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 10,
+    async (candidate) => {
+      const prompt = buildCandidateScoringPrompt(
+        job,
+        topRequirements,
+        candidate,
+      );
+      const result = await generateJson<Stage1CandidateScore>(prompt);
+      return {
+        candidateId: candidate.id,
+        matchScore: clampInt(Number(result?.matchScore ?? 0), 0, 100),
+        strengths: toStringArray(result?.strengths).slice(0, 5),
+        gaps: toStringArray(result?.gaps).slice(0, 5),
+        shortReason: String(result?.shortReason ?? "")
+          .trim()
+          .slice(0, 200),
+      };
+    },
+  );
+
+  const stage2Prompt = buildRankingPrompt(stage1);
+  const stage2 = await generateJson<Stage2RankingResult>(stage2Prompt);
+
+  const ranked = Array.isArray(stage2?.ranked) ? stage2.ranked : [];
+  const rankById = new Map(
+    ranked
+      .filter((r) => r && r.candidateId)
+      .map((r) => [
+        String(r.candidateId),
+        {
+          rank: clampInt(Number(r.rank ?? 0), 1, 9999),
+          finalRecommendation: String(r.finalRecommendation ?? "").trim(),
+        },
+      ]),
+  );
+
+  const candidatesOut: CandidateScore[] = stage1
+    .map((s) => {
+      const rankMeta = rankById.get(s.candidateId);
+      return {
+        candidateId: s.candidateId,
+        rank: rankMeta?.rank ?? 9999,
+        matchScore: s.matchScore,
+        confidence: deriveConfidence(s.matchScore),
+        strengths: s.strengths,
+        gaps: s.gaps,
+        reasoning: s.shortReason,
+        finalRecommendation:
+          rankMeta?.finalRecommendation ||
+          mapRecommendationFromScore(s.matchScore),
+      };
+    })
+    .sort((a, b) => a.rank - b.rank)
+    .map((c, idx) => ({ ...c, rank: idx + 1 }));
+
+  return {
+    candidates: candidatesOut,
+    comparisonSummary: String(stage2?.summary ?? "").trim(),
+  };
+}
+
+type Stage1CandidateScore = {
+  candidateId: string;
+  matchScore: number;
+  strengths: string[];
+  gaps: string[];
+  shortReason: string;
+};
+
+type Stage2RankingResult = {
+  ranked: Array<{
+    candidateId: string;
+    rank: number;
+    finalRecommendation: "Strong hire" | "Consider" | "Weak fit" | "Reject";
+  }>;
+  summary: string;
+};
+
+function buildCandidateScoringPrompt(
+  job: JobData,
+  topRequirements: string[],
+  candidate: CandidateData,
+): string {
+  const name =
+    `${candidate.firstName ?? ""} ${candidate.lastName ?? ""}`.trim();
+  const skills = toUniqueStrings(candidate.skills?.map((s) => s?.name)).slice(
+    0,
+    20,
+  );
+  const roles = toUniqueStrings(
+    candidate.experience?.map((e) => e?.role),
+  ).slice(0, 10);
+  const degrees = toUniqueStrings(
+    candidate.education?.map((e) => e?.degree),
+  ).slice(0, 5);
+
+  return `Evaluate this candidate for the job.
+
+JOB:
+Title: ${String(job.title ?? "").trim()}
+Key Requirements:
+${topRequirements.map((r) => `- ${r}`).join("\n")}
+
+CANDIDATE:
+CandidateId: ${candidate.id}
+Name: ${name || "Unknown"}
+Skills: ${skills.join(", ") || "None"}
+Experience (roles): ${roles.join(", ") || "None"}
+Education (degrees): ${degrees.join(", ") || "None"}
+
+TASK:
+Return STRICT JSON:
+
+{
+  "candidateId": "string",
+  "matchScore": 0,
+  "strengths": ["short bullet"],
+  "gaps": ["short bullet"],
+  "shortReason": "1 sentence"
+}
+
+Rules:
+- matchScore: integer 0-100
+- Keep strengths/gaps short (max 5 each)
+- shortReason: 1 sentence`;
+}
+
+function buildRankingPrompt(stage1: Stage1CandidateScore[]): string {
+  const input = stage1.map((c) => ({
+    candidateId: c.candidateId,
+    matchScore: c.matchScore,
+    strengths: c.strengths,
+  }));
+
+  return `Rank these candidates based on matchScore and strengths.
+
+Input:
+${JSON.stringify(input)}
+
+Return JSON:
+{
+  "ranked": [
+    {
+      "candidateId": "string",
+      "rank": 1,
+      "finalRecommendation": "Strong hire"
+    }
+  ],
+  "summary": "Short explanation of top candidates"
+}
+
+Rules:
+- Do not re-analyze resumes
+- Keep summary short
+- Ranked list must include all candidates`;
+}
+
+async function generateJson<T>(prompt: string): Promise<T> {
   const response = await genAI.models.generateContent({
     model: ENV.gemini_model,
     contents: prompt,
@@ -92,84 +252,73 @@ export async function evaluateCandidates(
   });
 
   const text = response.text;
-  if (!text) {
-    throw new Error("Empty response from Gemini API");
-  }
+  if (!text) throw new Error("Empty response from Gemini API");
 
   try {
-    const parsed: ScreeningResult = JSON.parse(text);
-    return parsed;
+    return JSON.parse(text) as T;
   } catch (error) {
     throw new Error(`Failed to parse Gemini response: ${error}`);
   }
 }
 
-function buildPrompt(
-  job: JobData,
-  candidates: CandidateData[],
-  weights: { skills: number; experience: number; education: number },
-): string {
-  const weightsPercent = {
-    skills: Math.round(weights.skills * 100),
-    experience: Math.round(weights.experience * 100),
-    education: Math.round(weights.education * 100),
-  };
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
 
-  return `You are an expert technical recruiter with 10+ years experience. Evaluate candidates against job requirements.
-
-## JOB DETAILS
-Title: ${job.title}
-Description: ${job.description}
-Requirements:
-${job.requirements.map((r) => `- ${r}`).join("\n")}
-
-## SCORING WEIGHTS
-- Skills match: ${weightsPercent.skills}%
-- Experience relevance: ${weightsPercent.experience}%
-- Education fit: ${weightsPercent.education}%
-
-## CANDIDATES TO EVALUATE
-${candidates
-  .map(
-    (c, i) => `
-### Candidate ${i + 1}: ${c.firstName} ${c.lastName} (ID: ${c.id})
-Headline: ${c.headline}
-Bio: ${c.bio || "N/A"}
-Skills: ${c.skills.map((s) => `${s.name} (${s.level}, ${s.yearsOfExperience} yrs)`).join(", ")}
-Experience:
-${c.experience.map((e) => `- ${e.role} at ${e.company}: ${e.description} [Tech: ${e.technologies.join(", ")}]`).join("\n")}
-Education: ${c.education.map((e) => `${e.degree} in ${e.fieldOfStudy} from ${e.institution}`).join(", ")}
-Certifications: ${c.certifications?.map((c) => c.name).join(", ") || "None"}
-Projects: ${c.projects?.map((p) => `${p.name} (${p.technologies.join(", ")})`).join(", ") || "None"}
-`,
-  )
-  .join("\n---\n")}
-
-## TASK
-Evaluate all candidates. Return STRICT JSON:
-
-{
-  "candidates": [
-    {
-      "candidateId": "string",
-      "rank": 1,
-      "matchScore": 87,
-      "confidence": "high",
-      "strengths": ["string"],
-      "gaps": ["string"],
-      "reasoning": "Detailed explanation of fit...",
-      "finalRecommendation": "Strong hire | Consider | Weak fit | Reject"
+  const workers = Array.from({
+    length: Math.min(concurrency, items.length),
+  }).map(async () => {
+    while (true) {
+      const current = nextIndex;
+      nextIndex += 1;
+      if (current >= items.length) return;
+      results[current] = await mapper(items[current], current);
     }
-  ],
-  "comparisonSummary": "Brief comparison of top candidates and why rankings differ"
+  });
+
+  await Promise.all(workers);
+  return results;
 }
 
-RULES:
-- matchScore: 0-100 integer
-- confidence: high (score 80+), medium (60-79), low (<60)
-- Rank 1 = best candidate
-- Strengths: specific skill/experience matches
-- Gaps: missing requirements or weaknesses
-- Reasoning: 2-3 sentences explaining score
-- FinalRecommendation: actionable hiring verdict`;
+function deriveConfidence(score: number): CandidateScore["confidence"] {
+  if (score >= 80) return "high";
+  if (score >= 60) return "medium";
+  return "low";
+}
+
+function mapRecommendationFromScore(
+  score: number,
+): CandidateScore["finalRecommendation"] {
+  if (score >= 85) return "Strong hire";
+  if (score >= 70) return "Consider";
+  if (score >= 50) return "Weak fit";
+  return "Reject";
+}
+
+function clampInt(n: number, min: number, max: number) {
+  const x = Math.round(Number(n));
+  if (!Number.isFinite(x)) return min;
+  return Math.min(max, Math.max(min, x));
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((v) => String(v ?? "").trim()).filter(Boolean);
+}
+
+function toUniqueStrings(value: unknown): string[] {
+  const arr = Array.isArray(value) ? value : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const v of arr) {
+    const s = String(v ?? "").trim();
+    if (!s || seen.has(s.toLowerCase())) continue;
+    seen.add(s.toLowerCase());
+    out.push(s);
+  }
+  return out;
 }
