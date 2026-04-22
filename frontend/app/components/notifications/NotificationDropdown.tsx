@@ -32,75 +32,51 @@ export default function NotificationDropdown({
 }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Mock notifications based on role
-  const talentNotifications: Notification[] = [
-    {
-      id: "1",
-      title: "Application Shortlisted!",
-      message:
-        "Congratulations! You have been shortlisted for Senior Full Stack Developer at Umurava.",
-      type: "success",
-      category: "application",
-      createdAt: "2 mins ago",
-      isRead: false,
-    },
-    {
-      id: "2",
-      title: "New Job Match",
-      message: "A new Backend Engineer position matches your profile skills.",
-      type: "info",
-      category: "job",
-      createdAt: "1 hour ago",
-      isRead: false,
-    },
-    {
-      id: "3",
-      title: "Profile Incomplete",
-      message:
-        "Complete your profile to increase your chances of being hired by 40%.",
-      type: "warning",
-      category: "user",
-      createdAt: "5 hours ago",
-      isRead: true,
-    },
-  ];
+  // Load notifications from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("notifications");
+    if (stored) {
+      const parsed = JSON.parse(stored) as Notification[];
+      setNotifications(parsed);
+    }
+  }, []);
 
-  const adminNotifications: Notification[] = [
-    {
-      id: "a1",
-      title: "New Application Received",
-      message:
-        "Ndizeye David applied for the Senior Full Stack Developer position.",
-      type: "info",
-      category: "application",
-      createdAt: "5 mins ago",
-      isRead: false,
-    },
-    {
-      id: "a2",
-      title: "Screening Completed",
-      message:
-        "AI screening for 'UI/UX Designer' is finished. View top candidates.",
-      type: "success",
-      category: "system",
-      createdAt: "30 mins ago",
-      isRead: false,
-    },
-    {
-      id: "a3",
-      title: "Job Post Expiring",
-      message: "The 'Mobile Developer' job post will expire in 24 hours.",
-      type: "warning",
-      category: "job",
-      createdAt: "2 hours ago",
-      isRead: true,
-    },
-  ];
+  // Sync notifications to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem("notifications", JSON.stringify(notifications));
+  }, [notifications]);
 
-  const notifications =
-    role === "admin" ? adminNotifications : talentNotifications;
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+
+  // Format timestamp to relative time
+  const formatRelativeTime = (isoString: string) => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  };
+
+  // Mark single notification as read
+  const markAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+    );
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -150,7 +126,7 @@ export default function NotificationDropdown({
         <Bell className="h-5 w-5 text-gray-600" />
         {unreadCount > 0 && (
           <span className="absolute top-[-5px] right-[-5px] h-4 w-4 bg-[#286ef0] text-white text-[10px] font-bold rounded-full border-2 border-white grid place-items-center">
-            2
+            {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
@@ -159,10 +135,15 @@ export default function NotificationDropdown({
         <div className="absolute right-0 mt-3 w-80 md:w-96 bg-white rounded-[20px] shadow-2xl border border-gray-100 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
           <div className="px-6 pt-5 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
             <h3 className="font-black text-[#25324B]">Notifications</h3>
-            <button className="text-xs font-bold text-[#286ef0] hover:underline flex items-center gap-1">
-              <CheckCheck className="w-3.5 h-3.5" />
-              Mark all read
-            </button>
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs font-bold text-[#286ef0] hover:underline flex items-center gap-1"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                Mark all read
+              </button>
+            )}
           </div>
 
           <div className="max-h-[400px] overflow-y-auto">
@@ -171,6 +152,7 @@ export default function NotificationDropdown({
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
+                    onClick={() => markAsRead(notification.id)}
                     className={`px-6 py-5 hover:bg-gray-50 transition-colors cursor-pointer relative group ${!notification.isRead ? "bg-blue-50/20" : ""}`}
                   >
                     {!notification.isRead && (
@@ -192,16 +174,13 @@ export default function NotificationDropdown({
                             {notification.title}
                           </p>
                           <span className="text-[10px] font-medium text-gray-400">
-                            {notification.createdAt}
+                            {formatRelativeTime(notification.createdAt)}
                           </span>
                         </div>
                         <p className="text-xs text-[#7C8493] leading-relaxed line-clamp-2">
                           {notification.message}
                         </p>
                       </div>
-                      <button className="p-1 hover:bg-gray-200 rounded-lg transition-all cursor-pointer self-start">
-                        <MoreVertical className="w-3.5 h-3.5 text-gray-400" />
-                      </button>
                     </div>
                   </div>
                 ))}

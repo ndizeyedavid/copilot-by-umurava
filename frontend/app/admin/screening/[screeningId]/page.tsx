@@ -234,6 +234,96 @@ export default function ScreeningResultsPage() {
     },
   });
 
+  // Track previous status to detect when screening completes
+  const prevStatusRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!resultsQuery.data) return;
+
+    const isExternal = resultsQuery.data.kind === "external";
+    const isInternal = resultsQuery.data.kind === "internal";
+    const currentStatus = isExternal
+      ? (resultsQuery.data.status ?? null)
+      : null;
+    const hasResults =
+      resultsQuery.data.results && resultsQuery.data.results.length > 0;
+
+    // Check if notification was already triggered for this screening
+    const triggeredScreenings = JSON.parse(
+      localStorage.getItem("triggered-screenings") || "{}",
+    );
+    const hasTriggered = triggeredScreenings[screeningId] === true;
+
+    console.log("Screening status check:", {
+      kind: resultsQuery.data.kind,
+      isExternal,
+      isInternal,
+      currentStatus,
+      hasResults,
+      prevStatus: prevStatusRef.current,
+      hasTriggered,
+      screeningId,
+    });
+
+    // For external screenings: trigger when status changes from processing to completed
+    if (
+      isExternal &&
+      prevStatusRef.current === "processing" &&
+      currentStatus === "completed" &&
+      !hasTriggered
+    ) {
+      console.log(
+        "External screening completed! Playing sound and adding notification",
+      );
+      triggeredScreenings[screeningId] = true;
+      localStorage.setItem(
+        "triggered-screenings",
+        JSON.stringify(triggeredScreenings),
+      );
+      triggerNotification();
+    }
+
+    // For internal screenings: trigger when results are first available
+    if (isInternal && hasResults && !hasTriggered) {
+      console.log(
+        "Internal screening completed! Playing sound and adding notification",
+      );
+      triggeredScreenings[screeningId] = true;
+      localStorage.setItem(
+        "triggered-screenings",
+        JSON.stringify(triggeredScreenings),
+      );
+      triggerNotification();
+    }
+
+    prevStatusRef.current = currentStatus;
+  }, [resultsQuery.data, screeningId]);
+
+  const triggerNotification = () => {
+    // Play completion sound
+    const audio = new Audio("/sounds/notification.mp3");
+    audio.play().catch((err) => console.log("Audio play failed:", err));
+
+    // Add notification to localStorage
+    const notifications = JSON.parse(
+      localStorage.getItem("notifications") || "[]",
+    );
+    const newNotification = {
+      id: Date.now().toString(),
+      title: "Screening Completed",
+      message: `Screening ${screeningId} has been completed successfully.`,
+      type: "success",
+      category: "job",
+      createdAt: new Date().toISOString(),
+      isRead: false,
+    };
+    localStorage.setItem(
+      "notifications",
+      JSON.stringify([newNotification, ...notifications]),
+    );
+    console.log("Notification added to localStorage");
+  };
+
   const isInternal = resultsQuery.data?.kind === "internal";
   const results = resultsQuery.data?.results ?? [];
 
