@@ -72,6 +72,7 @@ export async function evaluateCandidates(
   job: JobData,
   candidates: CandidateData[],
 ): Promise<ScreeningResult> {
+  const startedAt = Date.now();
   const topRequirements = (
     Array.isArray(job.requirements) ? job.requirements : []
   )
@@ -85,27 +86,61 @@ export async function evaluateCandidates(
   const stage1 = await mapWithConcurrency(
     candidates,
     Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 10,
-    async (candidate) => {
+    async (candidate, index) => {
       const prompt = buildCandidateScoringPrompt(
         job,
         topRequirements,
         candidate,
       );
-      const result = await generateJson<Stage1CandidateScore>(prompt);
-      return {
-        candidateId: candidate.id,
-        matchScore: clampInt(Number(result?.matchScore ?? 0), 0, 100),
-        strengths: toStringArray(result?.strengths).slice(0, 5),
-        gaps: toStringArray(result?.gaps).slice(0, 5),
-        shortReason: String(result?.shortReason ?? "")
-          .trim()
-          .slice(0, 200),
-      };
+      try {
+        const result = await generateJson<Stage1CandidateScore>(prompt, {
+          label: `stage1:candidate:${index + 1}/${candidates.length}`,
+          maxOutputTokens: 256,
+        });
+        return {
+          candidateId: candidate.id,
+          matchScore: clampInt(Number(result?.matchScore ?? 0), 0, 100),
+          strengths: toStringArray(result?.strengths).slice(0, 5),
+          gaps: toStringArray(result?.gaps).slice(0, 5),
+          shortReason: String(result?.shortReason ?? "")
+            .trim()
+            .slice(0, 200),
+        };
+      } catch (error) {
+        console.log(
+          `Gemini stage1 failed (candidateId=${candidate.id}) - continuing with fallback`,
+        );
+        return {
+          candidateId: candidate.id,
+          matchScore: 0,
+          strengths: [],
+          gaps: ["AI evaluation failed"],
+          shortReason: "AI evaluation failed",
+        };
+      }
     },
   );
 
   const stage2Prompt = buildRankingPrompt(stage1);
-  const stage2 = await generateJson<Stage2RankingResult>(stage2Prompt);
+  const stage2 = await (async () => {
+    try {
+      return await generateJson<Stage2RankingResult>(stage2Prompt, {
+        label: "stage2:ranking",
+        maxOutputTokens: 512,
+      });
+    } catch (error) {
+      console.log("Gemini stage2 ranking failed - using fallback ranking");
+      const fallbackRanked = stage1
+        .slice()
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .map((c, idx) => ({
+          candidateId: c.candidateId,
+          rank: idx + 1,
+          finalRecommendation: mapRecommendationFromScore(c.matchScore) as any,
+        }));
+      return { ranked: fallbackRanked, summary: "" } as Stage2RankingResult;
+    }
+  })();
 
   const ranked = Array.isArray(stage2?.ranked) ? stage2.ranked : [];
   const rankById = new Map(
@@ -138,6 +173,12 @@ export async function evaluateCandidates(
     })
     .sort((a, b) => a.rank - b.rank)
     .map((c, idx) => ({ ...c, rank: idx + 1 }));
+
+  console.log(
+    `AI screening pipeline complete: candidates=${candidates.length} concurrency=${
+      Number.isFinite(concurrency) ? concurrency : "default"
+    } totalMs=${Date.now() - startedAt}`,
+  );
 
   return {
     candidates: candidatesOut,
@@ -241,24 +282,94 @@ Rules:
 - Ranked list must include all candidates`;
 }
 
-async function generateJson<T>(prompt: string): Promise<T> {
-  const response = await genAI.models.generateContent({
-    model: ENV.gemini_model,
-    contents: prompt,
-    config: {
-      temperature: 0.2,
-      responseMimeType: "application/json",
-    },
-  });
+async function generateJson<T>(
+  prompt: string,
+  opts?: { label?: string; maxOutputTokens?: number },
+): Promise<T> {
+  const label = opts?.label ? ` (${opts.label})` : "";
+  const approxChars = prompt.length;
+  const maxOutputTokens =
+    Number.isFinite(opts?.maxOutputTokens) &&
+    (opts?.maxOutputTokens as number) > 0
+      ? (opts?.maxOutputTokens as number)
+      : undefined;
 
-  const text = response.text;
-  if (!text) throw new Error("Empty response from Gemini API");
+  const maxAttempts = clampInt(
+    Number(process.env.SCREENING_AI_RETRIES ?? 2) + 1,
+    1,
+    6,
+  );
 
-  try {
-    return JSON.parse(text) as T;
-  } catch (error) {
-    throw new Error(`Failed to parse Gemini response: ${error}`);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const startedAt = Date.now();
+
+    console.log(
+      `Gemini request${label}: model=${ENV.gemini_model} promptChars=${approxChars} maxOutputTokens=${maxOutputTokens ?? "default"} attempt=${attempt}/${maxAttempts}`,
+    );
+
+    try {
+      const response = await genAI.models.generateContent({
+        model: ENV.gemini_model,
+        contents: prompt,
+        config: {
+          temperature: 0,
+          responseMimeType: "application/json",
+          ...(maxOutputTokens ? { maxOutputTokens } : {}),
+        },
+      });
+
+      const text = response.text;
+      if (!text) throw new Error("Empty response from Gemini API");
+
+      try {
+        const parsed = JSON.parse(text) as T;
+        console.log(
+          `Gemini response${label}: ok in ${Date.now() - startedAt}ms`,
+        );
+        return parsed;
+      } catch (error) {
+        console.log(
+          `Gemini response${label}: JSON parse failed in ${Date.now() - startedAt}ms`,
+        );
+        throw new Error(`Failed to parse Gemini response: ${error}`);
+      }
+    } catch (error) {
+      lastError = error;
+      const transient = isTransientGeminiError(error);
+      console.log(
+        `Gemini error${label}: transient=${transient} attempt=${attempt}/${maxAttempts}`,
+      );
+      if (!transient || attempt === maxAttempts) break;
+      await sleep(computeBackoffMs(attempt));
+    }
   }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function computeBackoffMs(attempt: number) {
+  const base = 500;
+  const cappedAttempt = Math.min(Math.max(attempt, 1), 6);
+  const exp = base * Math.pow(2, cappedAttempt - 1);
+  const jitter = Math.floor(Math.random() * 250);
+  return Math.min(exp + jitter, 6000);
+}
+
+function isTransientGeminiError(error: unknown) {
+  const msg = String((error as any)?.message ?? error ?? "").toLowerCase();
+  return (
+    msg.includes("internal") ||
+    msg.includes('"code":500') ||
+    msg.includes('status":"internal') ||
+    msg.includes("429") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("timeout")
+  );
 }
 
 async function mapWithConcurrency<T, R>(
