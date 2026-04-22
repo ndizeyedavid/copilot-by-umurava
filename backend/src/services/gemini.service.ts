@@ -68,108 +68,475 @@ export interface ScreeningResult {
   comparisonSummary: string;
 }
 
-const DEFAULT_WEIGHTS = {
-  skills: 0.4,
-  experience: 0.35,
-  education: 0.25,
-};
-
 export async function evaluateCandidates(
   job: JobData,
   candidates: CandidateData[],
 ): Promise<ScreeningResult> {
-  const weights = job.weights || DEFAULT_WEIGHTS;
+  const startedAt = Date.now();
+  const topRequirements = (
+    Array.isArray(job.requirements) ? job.requirements : []
+  )
+    .filter(Boolean)
+    .map((r) => String(r).trim())
+    .filter(Boolean)
+    .slice(0, 5);
 
-  const prompt = buildPrompt(job, candidates, weights);
+  const concurrency = Number(process.env.SCREENING_AI_CONCURRENCY ?? 10);
 
-  const response = await genAI.models.generateContent({
-    model: ENV.gemini_model,
-    contents: prompt,
-    config: {
-      temperature: 0.2,
-      responseMimeType: "application/json",
+  const topK = (() => {
+    const raw = Number(process.env.SCREENING_AI_TOP_K ?? 0);
+    if (!Number.isFinite(raw)) return 0;
+    return Math.max(0, Math.floor(raw));
+  })();
+
+  const stage0 = candidates.map((c) => ({
+    candidate: c,
+    heuristicScore: computeHeuristicScore(topRequirements, c),
+  }));
+
+  const selectedIds = new Set<string>(
+    (topK > 0 && topK < candidates.length
+      ? stage0
+          .slice()
+          .sort((a, b) => b.heuristicScore - a.heuristicScore)
+          .slice(0, topK)
+      : stage0
+    ).map((x) => x.candidate.id),
+  );
+
+  const stage1Inputs = stage0
+    .filter((x) => selectedIds.has(x.candidate.id))
+    .map((x) => x.candidate);
+
+  const stage1Ai = await mapWithConcurrency(
+    stage1Inputs,
+    Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 10,
+    async (candidate, index) => {
+      const prompt = buildCandidateScoringPrompt(
+        job,
+        topRequirements,
+        candidate,
+      );
+      try {
+        const result = await generateJson<Stage1CandidateScore>(prompt, {
+          label: `stage1:candidate:${index + 1}/${stage1Inputs.length}`,
+          maxOutputTokens: 256,
+        });
+        return {
+          candidateId: candidate.id,
+          matchScore: clampInt(Number(result?.matchScore ?? 0), 0, 100),
+          strengths: toStringArray(result?.strengths).slice(0, 5),
+          gaps: toStringArray(result?.gaps).slice(0, 5),
+          shortReason: String(result?.shortReason ?? "")
+            .trim()
+            .slice(0, 200),
+        };
+      } catch (error) {
+        console.log(
+          `Gemini stage1 failed (candidateId=${candidate.id}) - continuing with fallback`,
+        );
+        return {
+          candidateId: candidate.id,
+          matchScore: 0,
+          strengths: [],
+          gaps: ["AI evaluation failed"],
+          shortReason: "AI evaluation failed",
+        };
+      }
     },
+  );
+
+  const aiById = new Map(stage1Ai.map((x) => [x.candidateId, x] as const));
+
+  const stage1: Stage1CandidateScore[] = stage0.map((x) => {
+    const ai = aiById.get(x.candidate.id);
+    if (ai) return ai;
+
+    const score = clampInt(x.heuristicScore, 0, 100);
+    return {
+      candidateId: x.candidate.id,
+      matchScore: score,
+      strengths: score > 0 ? ["Basic requirement match"] : [],
+      gaps: score > 0 ? [] : ["Low requirement match"],
+      shortReason: "Heuristic prefilter score (AI skipped)",
+    };
   });
 
-  const text = response.text;
-  if (!text) {
-    throw new Error("Empty response from Gemini API");
-  }
+  const stage2Prompt = buildRankingPrompt(stage1);
+  const stage2 = await (async () => {
+    try {
+      return await generateJson<Stage2RankingResult>(stage2Prompt, {
+        label: "stage2:ranking",
+        maxOutputTokens: 512,
+      });
+    } catch (error) {
+      console.log("Gemini stage2 ranking failed - using fallback ranking");
+      const fallbackRanked = stage1
+        .slice()
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .map((c, idx) => ({
+          candidateId: c.candidateId,
+          rank: idx + 1,
+          finalRecommendation: mapRecommendationFromScore(c.matchScore) as any,
+        }));
+      return { ranked: fallbackRanked, summary: "" } as Stage2RankingResult;
+    }
+  })();
 
-  try {
-    const parsed: ScreeningResult = JSON.parse(text);
-    return parsed;
-  } catch (error) {
-    throw new Error(`Failed to parse Gemini response: ${error}`);
-  }
+  const ranked = Array.isArray(stage2?.ranked) ? stage2.ranked : [];
+  const rankById = new Map(
+    ranked
+      .filter((r) => r && r.candidateId)
+      .map((r) => [
+        String(r.candidateId),
+        {
+          rank: clampInt(Number(r.rank ?? 0), 1, 9999),
+          finalRecommendation: String(r.finalRecommendation ?? "").trim(),
+        },
+      ]),
+  );
+
+  const candidatesOut: CandidateScore[] = stage1
+    .map((s) => {
+      const rankMeta = rankById.get(s.candidateId);
+      return {
+        candidateId: s.candidateId,
+        rank: rankMeta?.rank ?? 9999,
+        matchScore: s.matchScore,
+        confidence: deriveConfidence(s.matchScore),
+        strengths: s.strengths,
+        gaps: s.gaps,
+        reasoning: s.shortReason,
+        finalRecommendation:
+          rankMeta?.finalRecommendation ||
+          mapRecommendationFromScore(s.matchScore),
+      };
+    })
+    .sort((a, b) => a.rank - b.rank)
+    .map((c, idx) => ({ ...c, rank: idx + 1 }));
+
+  console.log(
+    `AI screening pipeline complete: candidates=${candidates.length} aiEvaluated=${stage1Inputs.length} concurrency=${
+      Number.isFinite(concurrency) ? concurrency : "default"
+    } totalMs=${Date.now() - startedAt}`,
+  );
+
+  return {
+    candidates: candidatesOut,
+    comparisonSummary: String(stage2?.summary ?? "").trim(),
+  };
 }
 
-function buildPrompt(
+type Stage1CandidateScore = {
+  candidateId: string;
+  matchScore: number;
+  strengths: string[];
+  gaps: string[];
+  shortReason: string;
+};
+
+type Stage2RankingResult = {
+  ranked: Array<{
+    candidateId: string;
+    rank: number;
+    finalRecommendation: "Strong hire" | "Consider" | "Weak fit" | "Reject";
+  }>;
+  summary: string;
+};
+
+function buildCandidateScoringPrompt(
   job: JobData,
-  candidates: CandidateData[],
-  weights: { skills: number; experience: number; education: number },
+  topRequirements: string[],
+  candidate: CandidateData,
 ): string {
-  const weightsPercent = {
-    skills: Math.round(weights.skills * 100),
-    experience: Math.round(weights.experience * 100),
-    education: Math.round(weights.education * 100),
-  };
+  const name =
+    `${candidate.firstName ?? ""} ${candidate.lastName ?? ""}`.trim();
+  const skills = toUniqueStrings(candidate.skills?.map((s) => s?.name)).slice(
+    0,
+    20,
+  );
+  const roles = toUniqueStrings(
+    candidate.experience?.map((e) => e?.role),
+  ).slice(0, 10);
+  const degrees = toUniqueStrings(
+    candidate.education?.map((e) => e?.degree),
+  ).slice(0, 5);
 
-  return `You are an expert technical recruiter with 10+ years experience. Evaluate candidates against job requirements.
+  return `Evaluate this candidate for the job.
 
-## JOB DETAILS
-Title: ${job.title}
-Description: ${job.description}
-Requirements:
-${job.requirements.map((r) => `- ${r}`).join("\n")}
+JOB:
+Title: ${String(job.title ?? "").trim()}
+Key Requirements:
+${topRequirements.map((r) => `- ${r}`).join("\n")}
 
-## SCORING WEIGHTS
-- Skills match: ${weightsPercent.skills}%
-- Experience relevance: ${weightsPercent.experience}%
-- Education fit: ${weightsPercent.education}%
+CANDIDATE:
+CandidateId: ${candidate.id}
+Name: ${name || "Unknown"}
+Skills: ${skills.join(", ") || "None"}
+Experience (roles): ${roles.join(", ") || "None"}
+Education (degrees): ${degrees.join(", ") || "None"}
 
-## CANDIDATES TO EVALUATE
-${candidates
-  .map(
-    (c, i) => `
-### Candidate ${i + 1}: ${c.firstName} ${c.lastName} (ID: ${c.id})
-Headline: ${c.headline}
-Bio: ${c.bio || "N/A"}
-Skills: ${c.skills.map((s) => `${s.name} (${s.level}, ${s.yearsOfExperience} yrs)`).join(", ")}
-Experience:
-${c.experience.map((e) => `- ${e.role} at ${e.company}: ${e.description} [Tech: ${e.technologies.join(", ")}]`).join("\n")}
-Education: ${c.education.map((e) => `${e.degree} in ${e.fieldOfStudy} from ${e.institution}`).join(", ")}
-Certifications: ${c.certifications?.map((c) => c.name).join(", ") || "None"}
-Projects: ${c.projects?.map((p) => `${p.name} (${p.technologies.join(", ")})`).join(", ") || "None"}
-`,
-  )
-  .join("\n---\n")}
-
-## TASK
-Evaluate all candidates. Return STRICT JSON:
+TASK:
+Return STRICT JSON:
 
 {
-  "candidates": [
+  "candidateId": "string",
+  "matchScore": 0,
+  "strengths": ["short bullet"],
+  "gaps": ["short bullet"],
+  "shortReason": "1 sentence"
+}
+
+Rules:
+- matchScore: integer 0-100
+- Keep strengths/gaps short (max 5 each)
+- shortReason: 1 sentence`;
+}
+
+function buildRankingPrompt(stage1: Stage1CandidateScore[]): string {
+  const input = stage1.map((c) => ({
+    candidateId: c.candidateId,
+    matchScore: c.matchScore,
+    strengths: c.strengths,
+  }));
+
+  return `Rank these candidates based on matchScore and strengths.
+
+Input:
+${JSON.stringify(input)}
+
+Return JSON:
+{
+  "ranked": [
     {
       "candidateId": "string",
       "rank": 1,
-      "matchScore": 87,
-      "confidence": "high",
-      "strengths": ["string"],
-      "gaps": ["string"],
-      "reasoning": "Detailed explanation of fit...",
-      "finalRecommendation": "Strong hire | Consider | Weak fit | Reject"
+      "finalRecommendation": "Strong hire"
     }
   ],
-  "comparisonSummary": "Brief comparison of top candidates and why rankings differ"
+  "summary": "Short explanation of top candidates"
 }
 
-RULES:
-- matchScore: 0-100 integer
-- confidence: high (score 80+), medium (60-79), low (<60)
-- Rank 1 = best candidate
-- Strengths: specific skill/experience matches
-- Gaps: missing requirements or weaknesses
-- Reasoning: 2-3 sentences explaining score
-- FinalRecommendation: actionable hiring verdict`;
+Rules:
+- Do not re-analyze resumes
+- Keep summary short
+- Ranked list must include all candidates`;
+}
+
+async function generateJson<T>(
+  prompt: string,
+  opts?: { label?: string; maxOutputTokens?: number },
+): Promise<T> {
+  const label = opts?.label ? ` (${opts.label})` : "";
+  const approxChars = prompt.length;
+  const maxOutputTokens =
+    Number.isFinite(opts?.maxOutputTokens) &&
+    (opts?.maxOutputTokens as number) > 0
+      ? (opts?.maxOutputTokens as number)
+      : undefined;
+
+  const maxAttempts = clampInt(
+    Number(process.env.SCREENING_AI_RETRIES ?? 2) + 1,
+    1,
+    6,
+  );
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const startedAt = Date.now();
+
+    console.log(
+      `Gemini request${label}: model=${ENV.gemini_model} promptChars=${approxChars} maxOutputTokens=${maxOutputTokens ?? "default"} attempt=${attempt}/${maxAttempts}`,
+    );
+
+    try {
+      const response = await genAI.models.generateContent({
+        model: ENV.gemini_model,
+        contents: prompt,
+        config: {
+          temperature: 0,
+          responseMimeType: "application/json",
+          ...(maxOutputTokens ? { maxOutputTokens } : {}),
+        },
+      });
+
+      const text = response.text;
+      if (!text) throw new Error("Empty response from Gemini API");
+
+      try {
+        const parsed = JSON.parse(text) as T;
+        console.log(
+          `Gemini response${label}: ok in ${Date.now() - startedAt}ms`,
+        );
+        return parsed;
+      } catch (error) {
+        console.log(
+          `Gemini response${label}: JSON parse failed in ${Date.now() - startedAt}ms`,
+        );
+        throw new Error(`Failed to parse Gemini response: ${error}`);
+      }
+    } catch (error) {
+      lastError = error;
+      const transient = isTransientGeminiError(error);
+      console.log(
+        `Gemini error${label}: transient=${transient} attempt=${attempt}/${maxAttempts}`,
+      );
+      if (!transient || attempt === maxAttempts) break;
+      await sleep(computeBackoffMs(attempt));
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error(String(lastError));
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function computeBackoffMs(attempt: number) {
+  const base = 500;
+  const cappedAttempt = Math.min(Math.max(attempt, 1), 6);
+  const exp = base * Math.pow(2, cappedAttempt - 1);
+  const jitter = Math.floor(Math.random() * 250);
+  return Math.min(exp + jitter, 6000);
+}
+
+function isTransientGeminiError(error: unknown) {
+  const msg = String((error as any)?.message ?? error ?? "").toLowerCase();
+  return (
+    msg.includes("internal") ||
+    msg.includes('"code":500') ||
+    msg.includes('status":"internal') ||
+    msg.includes("429") ||
+    msg.includes("resource_exhausted") ||
+    msg.includes("timeout")
+  );
+}
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({
+    length: Math.min(concurrency, items.length),
+  }).map(async () => {
+    while (true) {
+      const current = nextIndex;
+      nextIndex += 1;
+      if (current >= items.length) return;
+      results[current] = await mapper(items[current], current);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
+function deriveConfidence(score: number): CandidateScore["confidence"] {
+  if (score >= 80) return "high";
+  if (score >= 60) return "medium";
+  return "low";
+}
+
+function mapRecommendationFromScore(
+  score: number,
+): CandidateScore["finalRecommendation"] {
+  if (score >= 85) return "Strong hire";
+  if (score >= 70) return "Consider";
+  if (score >= 50) return "Weak fit";
+  return "Reject";
+}
+
+function clampInt(n: number, min: number, max: number) {
+  const x = Math.round(Number(n));
+  if (!Number.isFinite(x)) return min;
+  return Math.min(max, Math.max(min, x));
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((v) => String(v ?? "").trim()).filter(Boolean);
+}
+
+function toUniqueStrings(value: unknown): string[] {
+  const arr = Array.isArray(value) ? value : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const v of arr) {
+    const s = String(v ?? "").trim();
+    if (!s || seen.has(s.toLowerCase())) continue;
+    seen.add(s.toLowerCase());
+    out.push(s);
+  }
+  return out;
+}
+
+function computeHeuristicScore(
+  requirements: string[],
+  candidate: CandidateData,
+) {
+  const reqTokens = tokenize(requirements.join(" "));
+  if (reqTokens.size === 0) return 0;
+
+  const skills = toUniqueStrings(candidate.skills?.map((s) => s?.name)).join(
+    " ",
+  );
+  const roles = toUniqueStrings(candidate.experience?.map((e) => e?.role)).join(
+    " ",
+  );
+  const degrees = toUniqueStrings(
+    candidate.education?.map((e) => e?.degree),
+  ).join(" ");
+
+  const candTokens = tokenize(`${skills} ${roles} ${degrees}`);
+  if (candTokens.size === 0) return 0;
+
+  let overlap = 0;
+  for (const t of reqTokens) {
+    if (candTokens.has(t)) overlap += 1;
+  }
+
+  const ratio = overlap / Math.max(reqTokens.size, 1);
+  return Math.round(ratio * 100);
+}
+
+function tokenize(text: string) {
+  const cleaned = String(text ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s+.#-]/g, " ");
+  const parts = cleaned.split(/\s+/g).filter(Boolean);
+
+  const stop = new Set([
+    "and",
+    "or",
+    "the",
+    "a",
+    "an",
+    "to",
+    "in",
+    "for",
+    "with",
+    "of",
+    "on",
+    "at",
+    "as",
+    "is",
+    "are",
+    "be",
+    "this",
+    "that",
+    "from",
+  ]);
+
+  const set = new Set<string>();
+  for (const p of parts) {
+    if (p.length < 2) continue;
+    if (stop.has(p)) continue;
+    set.add(p);
+  }
+  return set;
 }

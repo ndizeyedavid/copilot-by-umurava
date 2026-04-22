@@ -192,6 +192,8 @@ const screeningController = {
 
   async runAiScreeningFromUmurava(req: Request, res: Response) {
     try {
+      const startedAt = Date.now();
+      console.log("[screening] runAiScreeningFromUmurava: start");
       const {
         jobId,
         topN = 10,
@@ -437,7 +439,13 @@ const screeningController = {
         };
       });
 
+      console.log(
+        `[screening] runAiScreeningFromUmurava: calling evaluateCandidates candidates=${candidatesData.length} elapsedMs=${Date.now() - startedAt}`,
+      );
       const aiResult = await evaluateCandidates(jobData, candidatesData);
+      console.log(
+        `[screening] runAiScreeningFromUmurava: evaluateCandidates done elapsedMs=${Date.now() - startedAt}`,
+      );
 
       const sortedCandidates = (aiResult.candidates ?? [])
         .slice()
