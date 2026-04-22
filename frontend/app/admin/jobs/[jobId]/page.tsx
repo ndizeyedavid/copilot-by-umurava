@@ -260,7 +260,7 @@ export default function AdminJobDetailsPage() {
                   Salary
                 </div>
                 <p className="mt-2 text-2xl font-bold text-[#25324B]">
-                  {job.salary.amount} {job.salary.currency}
+                  {job.salary.amount.toLocaleString()} {job.salary.currency}
                 </p>
               </div>
               <div className="rounded-[10px] border border-gray-100 bg-[#F8F8FD] p-4">
@@ -269,8 +269,9 @@ export default function AdminJobDetailsPage() {
                   Weights
                 </div>
                 <p className="mt-2 text-sm font-semibold text-[#25324B]">
-                  Skills {job.weights.skills}% • Exp {job.weights.experience}% •
-                  Edu {job.weights.education}%
+                  Skills {job.weights.skills * 100}% • Exp{" "}
+                  {job.weights.experience * 100}% • Edu{" "}
+                  {job.weights.education * 100}%
                 </p>
               </div>
             </div>

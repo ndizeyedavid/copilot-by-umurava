@@ -18,6 +18,7 @@ import ContractGenerateStep from "@/app/components/admin/jobs/screening/Contract
 import ContractEmailStep, {
   ContractWithEmail,
 } from "@/app/components/admin/jobs/screening/ContractEmailStep";
+import ScreeningOnboarding from "@/app/components/admin/screening/ScreeningOnboarding";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -60,6 +61,18 @@ export default function ScreeningResultsPage() {
 
   // Track if initial load is done
   const [isStateLoaded, setIsStateLoaded] = useState(false);
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem("screening-onboarding-seen");
+    if (!hasSeenOnboarding && isStateLoaded && step === "results") {
+      setRunTour(true);
+    }
+  }, [isStateLoaded, step]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem("screening-onboarding-seen", "true");
+  };
 
   type InternalScreening = {
     _id: string;
@@ -449,7 +462,7 @@ export default function ScreeningResultsPage() {
       </div>
 
       {/* Pipeline Stepper */}
-      <div className="mb-6">
+      <div data-tour="pipeline-steps" className="mb-6">
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           {[
             { id: "results", label: "Results" },
@@ -490,134 +503,144 @@ export default function ScreeningResultsPage() {
 
       {/* Step Content */}
       {step === "results" && (
-        <ResultsStep
-          results={results}
-          selectedCandidateIds={selectedCandidateIds}
-          expandedCandidate={expandedCandidate}
-          onToggleSelect={(id) => toggleCandidateSelect(id)}
-          onToggleExpand={setExpandedCandidate}
-          onNext={() => {
-            setShortlistedIds(selectedCandidateIds);
-            setStep("shortlist");
-          }}
-          onCompare={() => {
-            if (selectedCandidateIds.length !== 2) return;
-            const [a, b] = selectedCandidateIds;
-            router.push(
-              `/admin/screening/${screeningId}/compare?a=${encodeURIComponent(
-                a,
-              )}&b=${encodeURIComponent(b)}`,
-            );
-          }}
-          onRestart={() => router.push("/admin/screening")}
-          onBack={() => router.push("/admin/screening")}
-        />
+        <div data-tour="screening-results">
+          <ResultsStep
+            results={results}
+            selectedCandidateIds={selectedCandidateIds}
+            expandedCandidate={expandedCandidate}
+            onToggleSelect={(id) => toggleCandidateSelect(id)}
+            onToggleExpand={setExpandedCandidate}
+            onNext={() => {
+              setShortlistedIds(selectedCandidateIds);
+              setStep("shortlist");
+            }}
+            onCompare={() => {
+              if (selectedCandidateIds.length !== 2) return;
+              const [a, b] = selectedCandidateIds;
+              router.push(
+                `/admin/screening/${screeningId}/compare?a=${encodeURIComponent(
+                  a,
+                )}&b=${encodeURIComponent(b)}`,
+              );
+            }}
+            onRestart={() => router.push("/admin/screening")}
+            onBack={() => router.push("/admin/screening")}
+          />
+        </div>
       )}
 
       {step === "shortlist" && (
-        <ShortlistStep
-          candidates={results.map(
-            (r): ShortlistCandidate => ({
-              candidateId: r.candidateId,
-              name: r.name,
-              email: r.email,
-              rank: r.rank,
-              matchScore: r.matchScore,
-              confidence: r.confidence,
-              strengths: r.strengths,
-            }),
-          )}
-          initiallySelected={shortlistedIds}
-          jobTitle={jobQuery.data?.title || "Position"}
-          onContinue={(ids) => {
-            setShortlistedIds(ids);
-            setStep("interview_email");
-          }}
-          onBack={() => setStep("results")}
-        />
-      )}
-
-      {step === "interview_email" && (
-        <InterviewEmailStep
-          candidates={results
-            .filter((r) => shortlistedIds.includes(r.candidateId))
-            .map(
-              (r): InterviewEmailCandidate => ({
+        <div data-tour="shortlist-action">
+          <ShortlistStep
+            candidates={results.map(
+              (r): ShortlistCandidate => ({
                 candidateId: r.candidateId,
                 name: r.name,
                 email: r.email,
                 rank: r.rank,
                 matchScore: r.matchScore,
+                confidence: r.confidence,
+                strengths: r.strengths,
               }),
             )}
-          jobTitle={jobQuery.data?.title || "Position"}
-          onSend={async (data) => {
-            // Send interview invitation emails first
-            await sendInterviewEmails.mutateAsync({
-              candidates: data.candidates,
-              subject: data.subject,
-              body: data.body,
-              interviewType: data.interviewType,
-              date: data.date,
-              time: data.time,
-              duration: data.duration,
-              location: data.location || "",
-            });
-            // Then initialize interview candidates
-            setInterviewCandidates(
-              data.candidates.map((c) => ({
-                ...c,
-                status: "invited",
-                scheduledDate: data.date,
-                scheduledTime: data.time,
-              })),
-            );
-            setStep("interview_manage");
-          }}
-          onBack={() => setStep("shortlist")}
-        />
+            initiallySelected={shortlistedIds}
+            jobTitle={jobQuery.data?.title || "Position"}
+            onContinue={(ids) => {
+              setShortlistedIds(ids);
+              setStep("interview_email");
+            }}
+            onBack={() => setStep("results")}
+          />
+        </div>
+      )}
+
+      {step === "interview_email" && (
+        <div data-tour="email-action">
+          <InterviewEmailStep
+            candidates={results
+              .filter((r) => shortlistedIds.includes(r.candidateId))
+              .map(
+                (r): InterviewEmailCandidate => ({
+                  candidateId: r.candidateId,
+                  name: r.name,
+                  email: r.email,
+                  rank: r.rank,
+                  matchScore: r.matchScore,
+                }),
+              )}
+            jobTitle={jobQuery.data?.title || "Position"}
+            onSend={async (data) => {
+              // Send interview invitation emails first
+              await sendInterviewEmails.mutateAsync({
+                candidates: data.candidates,
+                subject: data.subject,
+                body: data.body,
+                interviewType: data.interviewType,
+                date: data.date,
+                time: data.time,
+                duration: data.duration,
+                location: data.location || "",
+              });
+              // Then initialize interview candidates
+              setInterviewCandidates(
+                data.candidates.map((c) => ({
+                  ...c,
+                  status: "invited",
+                  scheduledDate: data.date,
+                  scheduledTime: data.time,
+                })),
+              );
+              setStep("interview_manage");
+            }}
+            onBack={() => setStep("shortlist")}
+          />
+        </div>
       )}
 
       {step === "interview_manage" && (
-        <InterviewManageStep
-          candidates={interviewCandidates}
-          jobTitle={jobQuery.data?.title || "Position"}
-          onContinue={(ids) => {
-            setStep("contract_generate");
-          }}
-          onBack={() => setStep("interview_email")}
-          onUpdateCandidates={(updated) => {
-            setInterviewCandidates(updated);
-          }}
-        />
+        <div data-tour="interview-manage">
+          <InterviewManageStep
+            candidates={interviewCandidates}
+            jobTitle={jobQuery.data?.title || "Position"}
+            onContinue={(ids) => {
+              setStep("contract_generate");
+            }}
+            onBack={() => setStep("interview_email")}
+            onUpdateCandidates={(updated) => {
+              setInterviewCandidates(updated);
+            }}
+          />
+        </div>
       )}
 
       {step === "contract_generate" && (
-        <ContractGenerateStep
-          candidates={interviewCandidates
-            .filter((c) => c.status === "completed" && (c.rating || 0) >= 4)
-            .map((c) => ({
-              candidateId: c.candidateId,
-              name: c.name,
-              email: c.email,
-              position: jobQuery.data?.title || "Position",
-            }))}
-          jobTitle={jobQuery.data?.title || "Position"}
-          onContinue={(contracts) => {
-            setContractCandidates(
-              contracts.map((c) => ({
+        <div data-tour="contract-generate">
+          <ContractGenerateStep
+            candidates={interviewCandidates
+              .filter((c) => c.status === "completed" && (c.rating || 0) >= 4)
+              .map((c) => ({
                 candidateId: c.candidateId,
                 name: c.name,
                 email: c.email,
                 position: jobQuery.data?.title || "Position",
-                contractText: c.contractText,
-                status: "pending",
-              })),
-            );
-            setStep("contract_email");
-          }}
-          onBack={() => setStep("interview_manage")}
-        />
+              }))}
+            jobTitle={jobQuery.data?.title || "Position"}
+            onContinue={(contracts) => {
+              setContractCandidates(
+                contracts.map((c) => ({
+                  candidateId: c.candidateId,
+                  name: c.name,
+                  email: c.email,
+                  position: jobQuery.data?.title || "Position",
+                  contractText: c.contractText,
+                  status: "pending",
+                })),
+              );
+              setStep("contract_email");
+            }}
+            onBack={() => setStep("interview_manage")}
+          />
+        </div>
       )}
 
       {step === "contract_email" && (
@@ -646,7 +669,7 @@ export default function ScreeningResultsPage() {
       )}
 
       {step === "complete" && (
-        <div className="text-center py-12">
+        <div data-tour="contract-email" className="text-center py-12">
           <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100 mb-4">
             <CheckCircle2 className="h-10 w-10 text-green-600" />
           </div>
@@ -665,6 +688,10 @@ export default function ScreeningResultsPage() {
           </button>
         </div>
       )}
+      <ScreeningOnboarding
+        run={runTour}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 }

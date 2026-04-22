@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 
 import RichTextEditor from "@/app/components/admin/form/RichTextEditor";
+import JobOnboarding from "./JobOnboarding";
 import { api } from "@/lib/api/client";
 
 type FormValues = {
@@ -247,6 +248,19 @@ export default function AdminJobEditForm() {
   const isLoading = jobQuery.isLoading;
   const errorMessage = (jobQuery.error as any)?.message || null;
 
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem("job-onboarding-seen");
+    if (!hasSeenOnboarding && !isLoading) {
+      setRunTour(true);
+    }
+  }, [isLoading]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem("job-onboarding-seen", "true");
+  };
+
   const fieldClass =
     "w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#286ef0]";
 
@@ -273,7 +287,7 @@ export default function AdminJobEditForm() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <div>
+              <div data-tour="job-title">
                 <label className="mb-1 block text-sm font-semibold text-[#25324B]">
                   Title
                 </label>
@@ -311,7 +325,7 @@ export default function AdminJobEditForm() {
               </div>
             </div>
 
-            <div>
+            <div data-tour="job-description">
               <label className="mb-1 block text-sm font-semibold text-[#25324B]">
                 Description
               </label>
@@ -343,7 +357,10 @@ export default function AdminJobEditForm() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+            <div
+              data-tour="job-details"
+              className="grid grid-cols-1 gap-4 lg:grid-cols-4"
+            >
               <div>
                 <label className="mb-1 block text-sm font-semibold text-[#25324B]">
                   Job Type
@@ -419,7 +436,10 @@ export default function AdminJobEditForm() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-100 bg-[#F8F8FD] p-5">
+            <div
+              data-tour="job-weights"
+              className="rounded-xl border border-gray-100 bg-[#F8F8FD] p-5"
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-[#25324B]">
@@ -513,7 +533,10 @@ export default function AdminJobEditForm() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div
+              data-tour="job-requirements"
+              className="grid grid-cols-1 gap-6 lg:grid-cols-2"
+            >
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold text-[#25324B]">
@@ -562,7 +585,7 @@ export default function AdminJobEditForm() {
                 )}
               </div>
 
-              <div>
+              <div data-tour="job-benefits">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="text-sm font-semibold text-[#25324B]">
                     Benefits
@@ -600,7 +623,10 @@ export default function AdminJobEditForm() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <div
+              data-tour="job-save"
+              className="flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between"
+            >
               <p className="text-sm text-[#7C8493]"></p>
 
               <div className="flex gap-2">
@@ -625,6 +651,7 @@ export default function AdminJobEditForm() {
           </form>
         </>
       )}
+      <JobOnboarding run={runTour} onComplete={handleOnboardingComplete} />
     </div>
   );
 }

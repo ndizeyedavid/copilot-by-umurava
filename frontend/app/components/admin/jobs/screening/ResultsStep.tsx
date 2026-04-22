@@ -131,7 +131,10 @@ export default function ResultsStep({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div
+          data-tour="compare-candidates"
+          className="flex flex-wrap items-center justify-end gap-2"
+        >
           <button
             onClick={onCompare}
             disabled={!canCompare}
@@ -179,7 +182,10 @@ export default function ResultsStep({
               }`}
             >
               <div className="flex items-center">
-                <div className="pl-5 flex items-center gap-3">
+                <div
+                  data-tour="candidate-selection"
+                  className="pl-5 flex items-center gap-3"
+                >
                   <input
                     type="checkbox"
                     checked={selected}
