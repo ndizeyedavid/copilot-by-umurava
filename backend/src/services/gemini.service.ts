@@ -83,8 +83,33 @@ export async function evaluateCandidates(
 
   const concurrency = Number(process.env.SCREENING_AI_CONCURRENCY ?? 10);
 
-  const stage1 = await mapWithConcurrency(
-    candidates,
+  const topK = (() => {
+    const raw = Number(process.env.SCREENING_AI_TOP_K ?? 0);
+    if (!Number.isFinite(raw)) return 0;
+    return Math.max(0, Math.floor(raw));
+  })();
+
+  const stage0 = candidates.map((c) => ({
+    candidate: c,
+    heuristicScore: computeHeuristicScore(topRequirements, c),
+  }));
+
+  const selectedIds = new Set<string>(
+    (topK > 0 && topK < candidates.length
+      ? stage0
+          .slice()
+          .sort((a, b) => b.heuristicScore - a.heuristicScore)
+          .slice(0, topK)
+      : stage0
+    ).map((x) => x.candidate.id),
+  );
+
+  const stage1Inputs = stage0
+    .filter((x) => selectedIds.has(x.candidate.id))
+    .map((x) => x.candidate);
+
+  const stage1Ai = await mapWithConcurrency(
+    stage1Inputs,
     Number.isFinite(concurrency) && concurrency > 0 ? concurrency : 10,
     async (candidate, index) => {
       const prompt = buildCandidateScoringPrompt(
@@ -94,7 +119,7 @@ export async function evaluateCandidates(
       );
       try {
         const result = await generateJson<Stage1CandidateScore>(prompt, {
-          label: `stage1:candidate:${index + 1}/${candidates.length}`,
+          label: `stage1:candidate:${index + 1}/${stage1Inputs.length}`,
           maxOutputTokens: 256,
         });
         return {
@@ -120,6 +145,22 @@ export async function evaluateCandidates(
       }
     },
   );
+
+  const aiById = new Map(stage1Ai.map((x) => [x.candidateId, x] as const));
+
+  const stage1: Stage1CandidateScore[] = stage0.map((x) => {
+    const ai = aiById.get(x.candidate.id);
+    if (ai) return ai;
+
+    const score = clampInt(x.heuristicScore, 0, 100);
+    return {
+      candidateId: x.candidate.id,
+      matchScore: score,
+      strengths: score > 0 ? ["Basic requirement match"] : [],
+      gaps: score > 0 ? [] : ["Low requirement match"],
+      shortReason: "Heuristic prefilter score (AI skipped)",
+    };
+  });
 
   const stage2Prompt = buildRankingPrompt(stage1);
   const stage2 = await (async () => {
@@ -175,7 +216,7 @@ export async function evaluateCandidates(
     .map((c, idx) => ({ ...c, rank: idx + 1 }));
 
   console.log(
-    `AI screening pipeline complete: candidates=${candidates.length} concurrency=${
+    `AI screening pipeline complete: candidates=${candidates.length} aiEvaluated=${stage1Inputs.length} concurrency=${
       Number.isFinite(concurrency) ? concurrency : "default"
     } totalMs=${Date.now() - startedAt}`,
   );
@@ -432,4 +473,70 @@ function toUniqueStrings(value: unknown): string[] {
     out.push(s);
   }
   return out;
+}
+
+function computeHeuristicScore(
+  requirements: string[],
+  candidate: CandidateData,
+) {
+  const reqTokens = tokenize(requirements.join(" "));
+  if (reqTokens.size === 0) return 0;
+
+  const skills = toUniqueStrings(candidate.skills?.map((s) => s?.name)).join(
+    " ",
+  );
+  const roles = toUniqueStrings(candidate.experience?.map((e) => e?.role)).join(
+    " ",
+  );
+  const degrees = toUniqueStrings(
+    candidate.education?.map((e) => e?.degree),
+  ).join(" ");
+
+  const candTokens = tokenize(`${skills} ${roles} ${degrees}`);
+  if (candTokens.size === 0) return 0;
+
+  let overlap = 0;
+  for (const t of reqTokens) {
+    if (candTokens.has(t)) overlap += 1;
+  }
+
+  const ratio = overlap / Math.max(reqTokens.size, 1);
+  return Math.round(ratio * 100);
+}
+
+function tokenize(text: string) {
+  const cleaned = String(text ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s+.#-]/g, " ");
+  const parts = cleaned.split(/\s+/g).filter(Boolean);
+
+  const stop = new Set([
+    "and",
+    "or",
+    "the",
+    "a",
+    "an",
+    "to",
+    "in",
+    "for",
+    "with",
+    "of",
+    "on",
+    "at",
+    "as",
+    "is",
+    "are",
+    "be",
+    "this",
+    "that",
+    "from",
+  ]);
+
+  const set = new Set<string>();
+  for (const p of parts) {
+    if (p.length < 2) continue;
+    if (stop.has(p)) continue;
+    set.add(p);
+  }
+  return set;
 }
