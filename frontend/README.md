@@ -1,6 +1,8 @@
 # Copilot by Umurava - Frontend
 
-> AI-powered recruitment platform frontend built with Next.js 16, TypeScript, and Tailwind CSS
+> Copilot by Umurava is an AI-powered recruitment platform that streamlines the hiring process by explaining,
+  comparing, and guiding hiring decisions. The system consists of a modern web application built with Next.js
+  (frontend) and Node.js/Express (backend).
 
 ## 📋 Table of Contents
 
