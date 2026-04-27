@@ -42,7 +42,7 @@ const authController = {
   async googleCallback(req: Request, res: Response) {
     try {
       const { code, state } = req.query;
-      const role = (state as UserRole) || "talent";
+      const role = (state as UserRole) || "admin";
 
       if (!code) {
         return res.redirect(
